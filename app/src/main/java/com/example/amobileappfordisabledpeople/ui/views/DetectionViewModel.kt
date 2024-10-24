@@ -2,7 +2,7 @@ package com.example.amobileappfordisabledpeople.ui.views
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.mlr_apps.objectdetection.Data.DetectionObject
+import com.example.amobileappfordisabledpeople.Data.DetectionObject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

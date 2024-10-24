@@ -36,14 +36,14 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
 import com.google.accompanist.permissions.*
-import com.mlr_apps.objectdetection.ObjectDetector
-import com.mlr_apps.objectdetection.R
-import com.mlr_apps.objectdetection.YuvToRgbConverter
-import com.mlr_apps.objectdetection.ui.theme.ObjectDetectionTheme
+import com.example.amobileappfordisabledpeople.ObjectDetector
+import com.example.amobileappfordisabledpeople.R
+import com.example.amobileappfordisabledpeople.YuvToRgbConverter
+import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
 import android.speech.tts.TextToSpeech
-import com.mlr_apps.objectdetection.Data.DetectionObject
+import com.example.amobileappfordisabledpeople.Data.DetectionObject
 
 
 @OptIn(ExperimentalPermissionsApi::class)
