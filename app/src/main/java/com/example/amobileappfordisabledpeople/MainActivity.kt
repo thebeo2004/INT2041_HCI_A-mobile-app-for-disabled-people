@@ -3,45 +3,34 @@ package com.example.amobileappfordisabledpeople
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.amobileappfordisabledpeople.ui.theme.AMobileAppForDisabledPeopleTheme
+import com.example.amobileappfordisabledpeople.DefaultHomeScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            AMobileAppForDisabledPeopleTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+            MyApp()
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun MyApp() {
+    // State to manage the current mode ('Danger', 'Find', 'Description')
+    var currentMode by remember { mutableStateOf("Danger") }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    AMobileAppForDisabledPeopleTheme {
-        Greeting("Android")
+    // Material Theme wrapper
+    MaterialTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            DefaultHomeScreen(currentMode = currentMode, onModeChange = { currentMode = it })
+        }
     }
 }
