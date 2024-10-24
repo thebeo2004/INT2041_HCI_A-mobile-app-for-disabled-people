@@ -27,5 +27,6 @@ extra["camerax_version"] = "1.2.0-alpha03"
 
 // Task to clean the build directory
 tasks.register<Delete>("clean") {
-    delete(rootProject.buildDir)
+    delete(layout.buildDirectory)
 }
+

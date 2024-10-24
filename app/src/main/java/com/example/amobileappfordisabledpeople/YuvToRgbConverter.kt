@@ -3,57 +3,59 @@ package com.example.amobileappfordisabledpeople
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
+import android.graphics.BitmapFactory
 import android.media.Image
-import java.nio.ByteBuffer
+import java.io.ByteArrayOutputStream
 
-class YuvToRgbConverter(context: Context) {
+/**
+ * Helper class used to efficiently convert a [Media.Image] object from
+ * [ImageFormat.YUV_420_888] format to an RGB [Bitmap] object.
+ *
+ * The [yuvToRgb] method is optimized to achieve efficient conversion with good performance.
+ *
+ * NOTE: This code has been tested on a limited number of devices and is not considered
+ * production-ready. It is provided for illustration purposes and may require further
+ * optimization for specific devices or use cases.
+ */
 
+class YuvToRgbConverter(private val context: Context) {
+
+    @Synchronized
     fun yuvToRgb(image: Image, output: Bitmap) {
+        val yuvBytes = imageToByteArray(image)
+
+        // Convert YUV to Bitmap
+        val yuvImage = YuvImage(yuvBytes, ImageFormat.NV21, image.width, image.height, null)
+        val outStream = ByteArrayOutputStream()
+        yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), 100, outStream)
+        val jpegBytes = outStream.toByteArray()
+
+        // Decode JPEG bytes to Bitmap
+        val bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
+
+        // Clear the output Bitmap
+        output.eraseColor(0) // Clear the output Bitmap
+
+        // Draw the converted bitmap onto the output bitmap
+        val canvas = android.graphics.Canvas(output)
+        canvas.drawBitmap(bitmap, 0f, 0f, null)
+    }
+
+    private fun imageToByteArray(image: Image): ByteArray {
         assert(image.format == ImageFormat.YUV_420_888)
 
-        val yPlane = image.planes[0].buffer
-        val uPlane = image.planes[1].buffer
-        val vPlane = image.planes[2].buffer
+        val planes = image.planes
+        val ySize = planes[0].buffer.remaining()
+        val uSize = planes[1].buffer.remaining()
+        val vSize = planes[2].buffer.remaining()
 
-        val width = image.width
-        val height = image.height
-        val yRowStride = image.planes[0].rowStride
-        val uvRowStride = image.planes[1].rowStride
-        val uvPixelStride = image.planes[1].pixelStride
+        val yuvBytes = ByteArray(ySize + uSize + vSize)
+        planes[0].buffer.get(yuvBytes, 0, ySize)
+        planes[1].buffer.get(yuvBytes, ySize, uSize)
+        planes[2].buffer.get(yuvBytes, ySize + uSize, vSize)
 
-        var yp: Int
-        var up: Int
-        var vp: Int
-        var yVal: Int
-        var uVal: Int
-        var vVal: Int
-        var r: Int
-        var g: Int
-        var b: Int
-
-        val argbArray = IntArray(width * height)
-
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                yp = y * yRowStride + x
-                up = (y shr 1) * uvRowStride + (x shr 1) * uvPixelStride
-                vp = (y shr 1) * uvRowStride + (x shr 1) * uvPixelStride
-
-                yVal = yPlane[yp].toInt() and 0xFF
-                uVal = uPlane[up].toInt() and 0xFF - 128
-                vVal = vPlane[vp].toInt() and 0xFF - 128
-
-                r = yVal + (1.370705 * vVal).toInt()
-                g = yVal - (0.337633 * uVal).toInt() - (0.698001 * vVal).toInt()
-                b = yVal + (1.732446 * uVal).toInt()
-
-                argbArray[y * width + x] = (0xFF shl 24) or
-                        (r.coerceIn(0, 255) shl 16) or
-                        (g.coerceIn(0, 255) shl 8) or
-                        b.coerceIn(0, 255)
-            }
-        }
-
-        output.setPixels(argbArray, 0, width, 0, 0, width, height)
+        return yuvBytes
     }
 }
