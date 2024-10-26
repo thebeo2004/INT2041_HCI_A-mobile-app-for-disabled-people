@@ -1,4 +1,4 @@
-package com.example.amobileappfordisabledpeople
+package com.example.amobileappfordisabledpeople.features.object_detection
 
 import android.content.Context
 import android.graphics.Bitmap
