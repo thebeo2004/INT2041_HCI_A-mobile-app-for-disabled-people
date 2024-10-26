@@ -3,17 +3,13 @@ package com.example.amobileappfordisabledpeople
 import android.content.res.AssetFileDescriptor
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import java.util.Locale
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.example.amobileappfordisabledpeople.ui.views.DetectionScreen
 import dagger.hilt.android.AndroidEntryPoint
 import org.tensorflow.lite.Interpreter
 import java.io.BufferedReader
@@ -22,6 +18,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -37,7 +34,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
         setContent {
             val systemUiController = rememberSystemUiController()
-            val navController = rememberNavController()
 
             if(isSystemInDarkTheme()){
                 systemUiController.setNavigationBarColor(Color.Black, darkIcons = false)
@@ -46,20 +42,11 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
             cameraExecutor = Executors.newSingleThreadExecutor()
 
-            NavHost(
-                navController = navController,
-                startDestination = "Detection"
-            ) {
-                composable(route = "Detection"){
-                    DetectionScreen(
-                        cameraExecutor = cameraExecutor,
+            App(cameraExecutor = cameraExecutor,
                         yuvToRgbConverter = yuvToRgbConverter,
                         interpreter = interpreter,
                         labels = labels,
-                        textToSpeech = textToSpeech
-                    )
-                }
-            }
+                        textToSpeech = textToSpeech)
         }
     }
     //------------------------Fin  onCreate --------------------------------

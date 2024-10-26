@@ -10,7 +10,6 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
@@ -36,14 +35,13 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
 import com.google.accompanist.permissions.*
-import com.example.amobileappfordisabledpeople.ObjectDetector
+import com.example.amobileappfordisabledpeople.features.object_detection.ObjectDetector
 import com.example.amobileappfordisabledpeople.R
-import com.example.amobileappfordisabledpeople.YuvToRgbConverter
+import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
 import android.speech.tts.TextToSpeech
-import com.example.amobileappfordisabledpeople.Data.DetectionObject
 
 
 @OptIn(ExperimentalPermissionsApi::class)

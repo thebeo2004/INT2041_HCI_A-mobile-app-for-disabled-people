@@ -1,17 +1,18 @@
 package com.example.amobileappfordisabledpeople
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
+import android.speech.tts.TextToSpeech
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.example.amobileappfordisabledpeople.ui.navigation.ApplicationNavHost
+import org.tensorflow.lite.Interpreter
+import java.util.concurrent.ExecutorService
 
 @Composable
 fun AppBar(
@@ -30,8 +31,8 @@ fun AppBar(
 }
 
 @Composable
-fun App(navHostController: NavHostController = rememberNavController()) {
-    ApplicationNavHost(navHostController)
+fun App(navHostController: NavHostController = rememberNavController(), cameraExecutor: ExecutorService, yuvToRgbConverter: YuvToRgbConverter, interpreter: Interpreter, labels: List<String>, textToSpeech: TextToSpeech) {
+    ApplicationNavHost(navController = navHostController, cameraExecutor = cameraExecutor, yuvToRgbConverter = yuvToRgbConverter, interpreter = interpreter, labels = labels, textToSpeech = textToSpeech)
 }
 
 @Preview
