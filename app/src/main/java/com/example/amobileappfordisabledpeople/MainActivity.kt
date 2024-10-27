@@ -7,8 +7,12 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
+import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import org.tensorflow.lite.Interpreter
@@ -42,11 +46,17 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
             cameraExecutor = Executors.newSingleThreadExecutor()
 
-            App(cameraExecutor = cameraExecutor,
+            ObjectDetectionTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    App(cameraExecutor = cameraExecutor,
                         yuvToRgbConverter = yuvToRgbConverter,
                         interpreter = interpreter,
                         labels = labels,
                         textToSpeech = textToSpeech)
+                }
+            }
         }
     }
     //------------------------Fin  onCreate --------------------------------
