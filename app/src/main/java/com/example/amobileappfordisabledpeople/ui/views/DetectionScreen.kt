@@ -42,6 +42,8 @@ import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
 import android.speech.tts.TextToSpeech
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import com.example.amobileappfordisabledpeople.AppBar
 import com.example.amobileappfordisabledpeople.ui.navigation.DetectionDestination
@@ -54,11 +56,22 @@ fun DetectionScreen(
     yuvToRgbConverter: YuvToRgbConverter,
     interpreter: Interpreter,
     labels: List<String>,
-    textToSpeech: TextToSpeech
+    textToSpeech: TextToSpeech,
+    navigateToDangerWarning: () -> Unit = {},
+    navigateToExplore: () -> Unit = {}
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
     Scaffold(
+        modifier = Modifier.pointerInput(Unit) {
+            detectHorizontalDragGestures { change, dragAmount ->
+                if (dragAmount < 0) {
+                    navigateToDangerWarning()
+                } else {
+                    navigateToExplore()
+                }
+            }
+        },
         topBar = {
             AppBar(destinationName = stringResource(DetectionDestination.titleRes))
         }

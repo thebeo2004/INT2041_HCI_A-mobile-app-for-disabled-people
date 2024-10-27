@@ -7,7 +7,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
+import com.example.amobileappfordisabledpeople.ui.views.DangerWarningScreen
 import com.example.amobileappfordisabledpeople.ui.views.DetectionScreen
+import com.example.amobileappfordisabledpeople.ui.views.ExploreScreen
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
 
@@ -27,13 +29,26 @@ fun ApplicationNavHost(
         modifier = modifier
     ) {
         composable(route = DetectionDestination.route) {
-            DetectionScreen(cameraExecutor = cameraExecutor, yuvToRgbConverter = yuvToRgbConverter, interpreter = interpreter, labels = labels, textToSpeech = textToSpeech)
+            DetectionScreen(cameraExecutor = cameraExecutor,
+                yuvToRgbConverter = yuvToRgbConverter,
+                interpreter = interpreter,
+                labels = labels,
+                textToSpeech = textToSpeech,
+                navigateToDangerWarning = {navController.navigate(DangerWarningDestination.route)},
+                navigateToExplore = {navController.navigate(ExploreDestination.route)}
+            )
         }
         composable(route = DangerWarningDestination.route) {
-//            DangerWarningScreen()
+            DangerWarningScreen(
+                navigateToExplore = {navController.navigate(ExploreDestination.route)},
+                navigateToDetection = {navController.navigate(DetectionDestination.route)}
+            )
         }
         composable(route = ExploreDestination.route) {
-//            ExploreScreen()
+            ExploreScreen(
+                navigateToDetection = {navController.navigate(DetectionDestination.route)},
+                navigateToDangerWarning = {navController.navigate(DangerWarningDestination.route)}
+            )
 
         }
     }
