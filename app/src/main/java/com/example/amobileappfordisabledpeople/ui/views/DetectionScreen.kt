@@ -42,6 +42,9 @@ import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
 import android.speech.tts.TextToSpeech
+import androidx.compose.ui.res.stringResource
+import com.example.amobileappfordisabledpeople.AppBar
+import com.example.amobileappfordisabledpeople.ui.navigation.DetectionDestination
 
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -51,42 +54,27 @@ fun DetectionScreen(
     yuvToRgbConverter: YuvToRgbConverter,
     interpreter: Interpreter,
     labels: List<String>,
-    textToSpeech: TextToSpeech // Nhận TextToSpeech từ MainActivity
+    textToSpeech: TextToSpeech
 ) {
-    ObjectDetectionTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colors.background
-        ) {
-            val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
-            Column {
-                TopBar()
-                if (cameraPermissionState.status.isGranted){
-                    OpenCamera(cameraExecutor, yuvToRgbConverter, interpreter, labels, textToSpeech = textToSpeech) // Truyền MainActivity vào OpenCamera)
-                }else{
-                    Permission(cameraPermissionState)
-                }
-            }
+    Scaffold(
+        topBar = {
+            AppBar(destinationName = stringResource(DetectionDestination.titleRes))
         }
-    }
-}
-
-//----------------------------- TOP BAR --------------------------------------
-@Composable
-fun TopBar() {
-    Row(
-        modifier = Modifier
-            .padding(start = 16.dp, top = 50.dp, end = 24.dp, bottom = 16.dp)
-            .fillMaxWidth(),
-        Arrangement.SpaceBetween
-    ) {
-
-        Text(
-            text = "OBJECT DETECTION",
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-        )
+    ) { innerPadding ->
+        if (cameraPermissionState.status.isGranted) {
+            OpenCamera(
+                cameraExecutor = cameraExecutor,
+                yuvToRgbConverter = yuvToRgbConverter,
+                interpreter = interpreter,
+                labels = labels,
+                textToSpeech = textToSpeech,
+                contentPadding = innerPadding
+            )
+        } else {
+            Permission(cameraPermissionState)
+        }
     }
 }
 
@@ -99,12 +87,19 @@ fun OpenCamera(
     yuvToRgbConverter: YuvToRgbConverter,
     interpreter: Interpreter,
     labels: List<String>,
-    textToSpeech: TextToSpeech // Nhận TextToSpeech
+    textToSpeech: TextToSpeech, // Nhận TextToSpeech,
+    contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    Column {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         CameraPreview(
             context = context,
             lifecycleOwner = lifecycleOwner,
@@ -294,13 +289,5 @@ private fun Permission(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    ObjectDetectionTheme {
-        TopBar()
     }
 }
