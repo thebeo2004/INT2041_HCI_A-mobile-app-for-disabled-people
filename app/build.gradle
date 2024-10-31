@@ -49,7 +49,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion compose_version
+        kotlinCompilerExtensionVersion = "1.5.7"
     }
 
     packagingOptions {
@@ -64,9 +64,17 @@ android {
 }
 
 dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.21'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.21"
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
     implementation 'androidx.core:core-ktx:1.8.0'
     implementation "androidx.compose.ui:ui:$compose_version" // Giữ lại dòng này
-    implementation "androidx.compose.material:material:$compose_version"
+    implementation "androidx.compose.material:material:1.7.5"
+    implementation "androidx.compose.material3:material3:1.3.1"
+    implementation("androidx.compose.material3:material3")
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.0'
     implementation 'androidx.activity:activity-compose:1.5.0'
@@ -75,6 +83,14 @@ dependencies {
 
     // Cập nhật Compose Compiler lên phiên bản tương thích
     implementation "androidx.compose.compiler:compiler:$compose_version"
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("androidx.compose.material3:material3")
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

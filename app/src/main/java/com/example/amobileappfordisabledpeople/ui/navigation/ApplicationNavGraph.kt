@@ -46,8 +46,6 @@ fun ApplicationNavHost(
         }
         composable(route = ExploreDestination.route) {
             ExploreScreen(
-                navigateToDetection = {navController.navigate(DetectionDestination.route)},
-                navigateToDangerWarning = {navController.navigate(DangerWarningDestination.route)}
             )
 
         }
