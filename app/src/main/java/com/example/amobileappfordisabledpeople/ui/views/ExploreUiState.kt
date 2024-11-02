@@ -1,4 +1,4 @@
-package com.example.paligemma.presentation
+package com.example.amobileappfordisabledpeople.ui.views
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size

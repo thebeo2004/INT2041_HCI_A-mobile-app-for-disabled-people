@@ -20,5 +20,4 @@ object DangerWarningDestination : NavigationDestination {
 object ExploreDestination: NavigationDestination {
     override val route = "explore"
     override val titleRes = R.string.explore
-
 }

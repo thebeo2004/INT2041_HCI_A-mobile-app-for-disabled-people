@@ -29,6 +29,5 @@ fun DangerWarningScreen(
             AppBar(destinationName = stringResource(DangerWarningDestination.titleRes))
         }
     ) {
-
     }
 }
