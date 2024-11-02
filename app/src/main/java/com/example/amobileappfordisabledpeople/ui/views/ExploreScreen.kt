@@ -64,9 +64,17 @@ import java.io.File
 import java.util.Objects
 import androidx.compose.material3.Scaffold
 import android.content.Context
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
+import com.example.amobileappfordisabledpeople.AppBar
+import com.example.amobileappfordisabledpeople.ui.navigation.ExploreDestination
 
 @Composable
-fun ExploreScreen() {
+fun ExploreScreen(
+    navigateToDangerWarning: () -> Unit = {},
+    navigateToDetection: () -> Unit = {}
+) {
     val context = LocalContext.current
 
     var imageHeight by remember { mutableIntStateOf(0) }
@@ -136,6 +144,15 @@ fun ExploreScreen() {
     }
     // Scafold cho 1 nav bar
     Scaffold(
+        modifier = Modifier.pointerInput(Unit) {
+            detectHorizontalDragGestures { change, dragAmount ->
+                if (dragAmount < 0) {
+                    navigateToDangerWarning()
+                } else {
+                    navigateToDetection()
+                }
+            }
+        },
         containerColor = Color.Black,
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) {
@@ -145,6 +162,9 @@ fun ExploreScreen() {
                     contentColor = Color.White
                 )
             }
+        },
+        topBar = {
+            AppBar(destinationName = stringResource(ExploreDestination.titleRes))
         }
     ) { it ->
         Column(
