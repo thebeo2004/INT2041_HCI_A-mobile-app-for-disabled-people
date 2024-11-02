@@ -19,7 +19,7 @@ class CoordinatesModelRepoImpl(
     override suspend fun getCoordinatesModel(requestModel: RequestModel): Response<CoordinatesModel> {
         return withContext(Dispatchers.IO) {
             val file = getTempFile(applicationContext, requestModel.uri)
-            Log.d("TAG", "getCoordinatesModel: File = $file")
+//            Log.d("TAG", "getCoordinatesModel: File = $file")
             CoordinatesModelApi.instance.getCoordinatesModel(
                 text = requestModel.text.toRequestBody(MultipartBody.FORM),
                 width = requestModel.width.toRequestBody(MultipartBody.FORM),
@@ -40,6 +40,7 @@ fun getTempFile(context: Context, uri: Uri): File? {
         val resolver = context.contentResolver
         val tempFile = File(context.cacheDir, "${System.currentTimeMillis()}_.jpg")
         val inputStream = resolver.openInputStream(uri) ?: return null
+        Log.d("CACHE_ERROR", "context.cacheDir: $context.cacheDir")
         val outputStream = tempFile.outputStream()
         val buffer = ByteArray(4 * 1024) // Adjust buffer size as needed
         while (true) {
