@@ -39,7 +39,11 @@ fun ApplicationNavHost(
             )
         }
         composable(route = DangerWarningDestination.route) {
-            DangerWarningScreen(
+            DangerWarningScreen(cameraExecutor = cameraExecutor,
+                yuvToRgbConverter = yuvToRgbConverter,
+                interpreter = interpreter,
+                labels = labels,
+                textToSpeech = textToSpeech,
                 navigateToExplore = {navController.navigate(ExploreDestination.route)},
                 navigateToDetection = {navController.navigate(DetectionDestination.route)}
             )
