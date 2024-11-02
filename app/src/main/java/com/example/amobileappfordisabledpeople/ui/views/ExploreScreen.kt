@@ -176,6 +176,8 @@ fun ExploreScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (galleryImageUri != null || cameraImageUri != null) {
+                println("Gallery Image URI: $galleryImageUri");
+                println("Camera Image URI: $cameraImageUri");
                 ImageWithBoundingBox(
                     uri = galleryImageUri ?: cameraImageUri!!,
                     objectDetectionUiData = (uiState as? UiState.ObjectDetectionResponse)?.result,
