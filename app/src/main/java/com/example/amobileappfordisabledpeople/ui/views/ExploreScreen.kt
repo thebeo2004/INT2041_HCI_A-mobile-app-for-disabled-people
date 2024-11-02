@@ -57,8 +57,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.amobileappfordisabledpeople.Data.RequestModel
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepoImpl
-import com.example.paligemma.presentation.ObjectDetectionUiData
-import com.example.paligemma.presentation.UiState
+import com.example.amobileappfordisabledpeople.ui.views.ObjectDetectionUiData
+import com.example.amobileappfordisabledpeople.ui.views.UiState
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Objects

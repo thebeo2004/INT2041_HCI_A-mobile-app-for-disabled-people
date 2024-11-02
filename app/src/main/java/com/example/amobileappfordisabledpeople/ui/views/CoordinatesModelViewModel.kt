@@ -13,8 +13,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepo
 import com.example.amobileappfordisabledpeople.Data.RequestModel
 import com.example.amobileappfordisabledpeople.Data.Result
-import com.example.paligemma.presentation.ObjectDetectionUiData
-import com.example.paligemma.presentation.UiState
+import com.example.amobileappfordisabledpeople.ui.views.ObjectDetectionUiData
+import com.example.amobileappfordisabledpeople.ui.views.UiState
 import kotlinx.coroutines.launch
 import java.util.Locale
 
