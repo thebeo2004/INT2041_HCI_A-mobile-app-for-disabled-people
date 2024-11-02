@@ -147,9 +147,9 @@ fun ExploreScreen(
         modifier = Modifier.pointerInput(Unit) {
             detectHorizontalDragGestures { change, dragAmount ->
                 if (dragAmount < 0) {
-                    navigateToDangerWarning()
-                } else {
                     navigateToDetection()
+                } else {
+                    navigateToDangerWarning()
                 }
             }
         },
