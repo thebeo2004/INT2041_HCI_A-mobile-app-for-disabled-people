@@ -17,6 +17,7 @@ import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
 import org.tensorflow.lite.support.image.ops.Rot90Op
+import androidx.compose.runtime.Composable
 
 class ObjectDetector(
     private val yuvToRgbConverter: YuvToRgbConverter,
