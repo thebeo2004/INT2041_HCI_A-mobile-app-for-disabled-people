@@ -2,6 +2,7 @@ package com.example.amobileappfordisabledpeople.ui.views
 
 import android.content.Context
 import android.graphics.Paint
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.util.Size
 import androidx.camera.core.CameraSelector
@@ -10,10 +11,19 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -21,33 +31,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
-import com.google.accompanist.permissions.*
+import com.example.amobileappfordisabledpeople.AppBar
 import com.example.amobileappfordisabledpeople.features.object_detection.ObjectDetector
-import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
-import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
+import com.example.amobileappfordisabledpeople.ui.navigation.DangerWarningDestination
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
-import android.speech.tts.TextToSpeech
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
-import com.example.amobileappfordisabledpeople.AppBar
-import com.example.amobileappfordisabledpeople.ui.navigation.DangerWarningDestination
-import com.example.amobileappfordisabledpeople.ui.navigation.DetectionDestination
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -87,7 +89,7 @@ fun DangerWarningScreen(
                 contentPadding = innerPadding
             )
         } else {
-            Permission(cameraPermissionState)
+            CameraPermission(cameraPermissionState)
         }
     }
 }
@@ -292,36 +294,3 @@ fun CameraWarningPreview(
     }
 }
 
-
-//----------------------------- PERMISSION --------------------------------------
-@OptIn(ExperimentalPermissionsApi::class)
-@Composable
-private fun Permission(
-    cameraPermissionState: PermissionState
-) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        if (!cameraPermissionState.status.isGranted) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally) {
-
-                val textToShow = if (cameraPermissionState.status.shouldShowRationale) {
-                    "The camera is important for this app.\n Please grant the permission."
-                } else {
-                    "Camera not available"
-                }
-                Text(textToShow, textAlign = TextAlign.Center, color = MaterialTheme.colors.onSurface)
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Button(
-                    shape = CircleShape,
-                    onClick = { cameraPermissionState.launchPermissionRequest() }) {
-                    Text("Request permission")
-                    Icon(
-                        painterResource(id = R.drawable.ic_baseline_camera_24),
-                        contentDescription = "Icon camera", modifier = Modifier.padding(start = 8.dp))
-                }
-            }
-        }
-    }
-}
