@@ -18,15 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -61,16 +55,29 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepoImpl
 import com.example.amobileappfordisabledpeople.Data.RequestModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.Objects
 
+fun Context.createImageFile(): File {
+    // Create an image file name
+    val timeStamp = System.currentTimeMillis().toString()
+    val imageFileName = "JPEG_" + timeStamp + "_"
+    val image = File.createTempFile(
+        imageFileName, /* prefix */
+        ".jpg", /* suffix */
+        externalCacheDir      /* directory */
+    )
+    return image
+}
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ExploreScreen(
-    navigateToDangerWarning: () -> Unit = {},
-    navigateToDetection: () -> Unit = {}
-) {
+fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
+                  navigateToDetection: () -> Unit = {}) {
     val context = LocalContext.current
 
     var imageHeight by remember { mutableIntStateOf(0) }
@@ -101,23 +108,24 @@ fun ExploreScreen(
             }
         }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) {
-        if (it) {
+    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+
+    LaunchedEffect(key1 = cameraPermissionState.status.isGranted) {
+        if (cameraPermissionState.status.isGranted) {
             cameraImageFile = context.createImageFile()
             cameraUri = FileProvider.getUriForFile(
-                Objects.requireNonNull(context),
-                context.packageName + ".provider", cameraImageFile!!
+                context,
+                context.packageName + ".provider",
+                cameraImageFile!!
             )
             Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-            cameraUri?.let { it1 -> cameraLauncher.launch(it1) }
         } else {
             Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+            cameraPermissionState.launchPermissionRequest()
         }
     }
 
-    var textPrompt by rememberSaveable { mutableStateOf("") }
+    val textPrompt = "captioning"
 
     val pickMedia = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
@@ -197,7 +205,8 @@ fun ExploreScreen(
                                 cameraLauncher.launch(cameraUri!!)
                             } else {
                                 // Request a permission
-                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
+//                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
+                                cameraPermissionState.launchPermissionRequest()
                             }
                         },
                         modifier = Modifier
@@ -211,54 +220,7 @@ fun ExploreScreen(
                     ) {
                         Text("Open Camera")
                     }
-                    Button(
-                        onClick = {
-                            pickMedia.launch("image/*")
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(all = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF29B6F6),
-                            contentColor = Color(0xFFFFFFFF)
-                        )
-                    ) {
-                        Text("Upload Image")
-                    }
                 }
-
-                OutlinedTextField(
-                    value = textPrompt,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF29B6F6),
-                        unfocusedBorderColor = Color(0xFF29B6F6),
-                        focusedLabelColor = Color(0xFF29B6F6),
-                        unfocusedLabelColor = Color(0xFF29B6F6),
-                        focusedPlaceholderColor = Color(0xFFF5F5F5),
-                        unfocusedPlaceholderColor = Color(0xFFF5F5F5),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White
-                    ),
-                    label = { Text("Prompt") },
-                    onValueChange = { textPrompt = it },
-                    placeholder = { Text("Enter text prompt") },
-                    modifier = Modifier
-                        .padding(all = 4.dp)
-                        .align(Alignment.CenterHorizontally),
-                    trailingIcon = if (textPrompt.isNotEmpty()) {
-                        {
-                            IconButton(onClick = { textPrompt = "" }) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Clear,
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                    } else {
-                        null
-                    }
-                )
 
                 Button(
                     onClick = {
@@ -293,18 +255,6 @@ fun ExploreScreen(
             }
         }
     }
-}
-
-fun Context.createImageFile(): File {
-    // Create an image file name
-    val timeStamp = System.currentTimeMillis().toString()
-    val imageFileName = "JPEG_" + timeStamp + "_"
-    val image = File.createTempFile(
-        imageFileName, /* prefix */
-        ".jpg", /* suffix */
-        externalCacheDir      /* directory */
-    )
-    return image
 }
 
 @Composable
@@ -443,3 +393,4 @@ private fun ImageWithBoundingBox(
         }
     }
 }
+
