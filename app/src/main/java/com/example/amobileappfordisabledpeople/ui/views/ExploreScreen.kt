@@ -6,8 +6,6 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -38,16 +35,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -230,120 +221,10 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                     Text("Submit")
                 }
 
-                if (uiState is UiState.SegmentationResponse) {
-                    DrawSegmentationTextUi(uiState.result)
-                }
-
-                if (uiState is UiState.CaptionResponse) {
-                    DrawCaptionResponse(uiState.result)
-                }
-
             }
         }
     }
 }
-
-@Composable
-private fun DrawCaptionResponse(result: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        TitleText(
-            text = "PaliGemma response:",
-        )
-        Text(
-            text = result,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Normal,
-            color = Color.White
-        )
-    }
-}
-
-@Composable
-private fun DrawSegmentationTextUi(results: SegmentationUiData) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        results.colorsMap.forEach { (label, color) ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .background(color)
-                )
-                Text(
-                    text = label,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = Color.White
-                )
-            }
-        }
-
-    }
-}
-
-@Composable
-fun DrawSegmentationImageUi(results: SegmentationUiData) {
-    Canvas(modifier = Modifier) {
-        results.data.forEach { result ->
-            drawPath(
-                path = result.path,
-                color = result.color,
-                alpha = 0.75f
-            )
-        }
-    }
-}
-
-@Composable
-private fun TitleText(text: String) {
-    Text(
-        text = text,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.ExtraBold,
-        color = Color.White
-    )
-}
-
-@Composable
-private fun DrawObjectDetectionResponse(results: List<ObjectDetectionUiData>) {
-    //initial height set at 0.dp
-    val textMeasurer = rememberTextMeasurer()
-    results.forEach { result ->
-        Canvas(modifier = Modifier) {
-            drawRect(
-                color = result.color,
-                style = Stroke(width = 5f),
-                topLeft = result.topLeft,
-                size = result.size
-            )
-            drawText(
-                textMeasurer = textMeasurer,
-                topLeft = result.textTopLeft,
-                text = result.text,
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    background = result.color
-                ),
-                size = result.size
-            )
-        }
-    }
-}
-
 
 @Composable
 private fun ImageWithBoundingBox(
