@@ -96,13 +96,12 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
     var cameraUri: Uri? = remember {
         null
     }
-    var galleryImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+
     var cameraImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
 
     val cameraLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
             if (it) {
-                galleryImageUri = null
                 cameraImageUri = cameraUri
                 viewModel.resetData()
             }
@@ -126,16 +125,6 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
     }
 
     val textPrompt = "captioning"
-
-    val pickMedia = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            viewModel.resetData()
-            cameraImageUri = null
-            galleryImageUri = it
-        }
-    }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -166,11 +155,9 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (galleryImageUri != null || cameraImageUri != null) {
+            if (cameraImageUri != null) {
                 ImageWithBoundingBox(
-                    uri = galleryImageUri ?: cameraImageUri!!,
-                    objectDetectionUiData = (uiState as? UiState.ObjectDetectionResponse)?.result,
-                    segmentationUiData = (uiState as? UiState.SegmentationResponse)?.result,
+                    uri = cameraImageUri!!,
                 ) { h, w, leftDistance ->
                     imageHeight = h
                     imageWidth = w
@@ -205,7 +192,6 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                                 cameraLauncher.launch(cameraUri!!)
                             } else {
                                 // Request a permission
-//                                permissionLauncher.launch(android.Manifest.permission.CAMERA)
                                 cameraPermissionState.launchPermissionRequest()
                             }
                         },
@@ -227,7 +213,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                         viewModel.getCoordinatesModel(
                             requestModel = RequestModel(
                                 text = textPrompt,
-                                uri = galleryImageUri ?: cameraImageUri ?: Uri.EMPTY,
+                                uri = cameraImageUri ?: Uri.EMPTY,
                                 height = imageHeight.toString(),
                                 width = imageWidth.toString()
                             )
@@ -362,8 +348,6 @@ private fun DrawObjectDetectionResponse(results: List<ObjectDetectionUiData>) {
 @Composable
 private fun ImageWithBoundingBox(
     uri: Uri,
-    objectDetectionUiData: List<ObjectDetectionUiData>?,
-    segmentationUiData: SegmentationUiData?,
     onSizeChange: (Int, Int, Float) -> Unit
 ) {
     Box {
@@ -384,13 +368,6 @@ private fun ImageWithBoundingBox(
             )
         }
 
-        objectDetectionUiData?.let {
-            DrawObjectDetectionResponse(results = objectDetectionUiData)
-        }
-
-        segmentationUiData?.let {
-            DrawSegmentationImageUi(results = segmentationUiData)
-        }
     }
 }
 
