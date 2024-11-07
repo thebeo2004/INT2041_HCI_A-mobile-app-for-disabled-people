@@ -146,10 +146,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         return labels
     }
 
-    // Hàm để đọc văn bản
-    fun speakText(text: String) {
-        textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
-    }
 }
 
 

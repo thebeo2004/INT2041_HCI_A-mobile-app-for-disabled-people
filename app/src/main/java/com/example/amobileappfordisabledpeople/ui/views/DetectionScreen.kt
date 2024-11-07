@@ -1,6 +1,9 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
 import android.content.Context
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.Build
 import android.graphics.Paint
 import android.util.Log
 import android.util.Size
@@ -194,6 +197,13 @@ fun CameraPreview(
 
                                         // Đọc nhãn của đối tượng đầu tiên (hoặc tất cả các đối tượng nếu muốn)
                                         detectedObjectList.firstOrNull()?.let { detectedObject ->
+                                            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                val vibrationEffect = VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE) // Rung 300ms
+                                                vibrator.vibrate(vibrationEffect)
+                                            } else {
+                                                vibrator.vibrate(300) // Rung 300ms cho các phiên bản cũ hơn
+                                            }
                                             textToSpeech.speak(
                                                 detectedObject.label,
                                                 TextToSpeech.QUEUE_FLUSH,

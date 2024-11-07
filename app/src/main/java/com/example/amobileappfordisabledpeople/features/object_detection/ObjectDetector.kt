@@ -7,6 +7,7 @@ import android.media.Image
 import android.util.Size
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import androidx.compose.runtime.Composable
 import com.example.amobileappfordisabledpeople.Data.DetectionObject
 import com.example.amobileappfordisabledpeople.ObjectDetectorCallback
 import org.tensorflow.lite.DataType
