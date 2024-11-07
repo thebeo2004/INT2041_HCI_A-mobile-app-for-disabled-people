@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
+import com.example.amobileappfordisabledpeople.ui.views.ExploreScreen
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import org.tensorflow.lite.Interpreter
@@ -33,7 +34,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     //------------------------  onCreate ----------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Khởi tạo TextToSpeech
+
+        // Initialize TextToSpeech
         textToSpeech = TextToSpeech(this, this)
 
         setContent {
@@ -44,6 +46,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 systemUiController.setStatusBarColor(Color.Black, darkIcons = false)
             }
 
+            // Initialize ExecutorService for camera preview in another thread
             cameraExecutor = Executors.newSingleThreadExecutor()
 
             ObjectDetectionTheme {
@@ -61,6 +64,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     }
     //------------------------Fin  onCreate --------------------------------
 
+    //Implements TextToSpeech.OnInitListener
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
             // Thiết lập ngôn ngữ (US English)
@@ -73,6 +77,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    //Destroy TextToSpeech & ExecutorService instance
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
@@ -101,18 +106,22 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     private lateinit var cameraExecutor: ExecutorService
 
+    //Call load model function
     private val interpreter: Interpreter by lazy {
         Interpreter(loadModel())
     }
 
+    //Call load labels function
     private val labels: List<String> by lazy {
         loadLabels()
     }
 
+    //Call converter function
     private val yuvToRgbConverter: YuvToRgbConverter by lazy {
         YuvToRgbConverter(this)
     }
 
+    //Load object detection model
     private fun loadModel(fileName: String = MODEL_FILE_NAME): ByteBuffer {
         lateinit var modelBuffer: ByteBuffer
         var file: AssetFileDescriptor? = null
@@ -130,6 +139,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         return modelBuffer
     }
 
+    // Load labels for object detection model
     private fun loadLabels(fileName: String = LABEL_FILE_NAME): List<String> {
         var labels = listOf<String>()
         var inputStream: InputStream? = null
@@ -146,7 +156,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         return labels
     }
 
-    // Hàm để đọc văn bản
+    // speak text via TextToSpeech
     fun speakText(text: String) {
         textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
     }
