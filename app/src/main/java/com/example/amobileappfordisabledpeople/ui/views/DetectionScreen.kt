@@ -1,9 +1,6 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
 import android.content.Context
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.Build
 import android.graphics.Paint
 import android.util.Log
 import android.util.Size
@@ -197,13 +194,6 @@ fun CameraPreview(
 
                                         // Đọc nhãn của đối tượng đầu tiên (hoặc tất cả các đối tượng nếu muốn)
                                         detectedObjectList.firstOrNull()?.let { detectedObject ->
-                                            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                                val vibrationEffect = VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE) // Rung 300ms
-                                                vibrator.vibrate(vibrationEffect)
-                                            } else {
-                                                vibrator.vibrate(300) // Rung 300ms cho các phiên bản cũ hơn
-                                            }
                                             textToSpeech.speak(
                                                 detectedObject.label,
                                                 TextToSpeech.QUEUE_FLUSH,
@@ -215,7 +205,7 @@ fun CameraPreview(
                                     viewModel.setList(detectedObjectList)
                                 }
                             )
-                            }
+                        }
 
                     imageCapture = ImageCapture.Builder()
                         .setTargetRotation(previewView.display.rotation)
@@ -245,7 +235,10 @@ fun CameraPreview(
                 onDraw = {
 
                     detectionListObject.mapIndexed { i, detectionObject ->
-                        Log.d("Object", detectionObject.label + " --- "  +detectionObject.score)
+                        Log.d("Object", detectionObject.label + " --- " + detectionObject.score + " --- " + detectionObject.horizontalPosition + " --- " + detectionObject.verticalPosition)
+
+                        Log.e("PositionCalculation", "Horizontal: $detectionObject.horizontalPosition, Vertical: $detectionObject.verticalPosition")
+
                         paint.apply {
                             color = pathColorListInt[i]
                             style = Paint.Style.FILL
@@ -268,9 +261,10 @@ fun CameraPreview(
 
                         drawIntoCanvas {
                             it.nativeCanvas.drawText(
-                                detectionObject.label + " " + "%,.2f".format(detectionObject.score * 100) + "%",
-                                detectionObject.boundingBox.left,            // x-coordinates of the origin (top left)
-                                detectionObject.boundingBox.top - 5f, // y-coordinates of the origin (top left)
+                                "${detectionObject.label} ${"%,.2f".format(detectionObject.score * 100)}% " +
+                                        "(${detectionObject.horizontalPosition}, ${detectionObject.verticalPosition})",
+                                detectionObject.boundingBox.left,            // x-coordinate (top left)
+                                detectionObject.boundingBox.top - 5f,        // y-coordinate (top left)
                                 paint
                             )
                         }

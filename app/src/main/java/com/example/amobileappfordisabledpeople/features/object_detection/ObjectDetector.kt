@@ -4,10 +4,10 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.RectF
 import android.media.Image
+import android.util.Log
 import android.util.Size
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import androidx.compose.runtime.Composable
 import com.example.amobileappfordisabledpeople.Data.DetectionObject
 import com.example.amobileappfordisabledpeople.ObjectDetectorCallback
 import org.tensorflow.lite.DataType
@@ -80,11 +80,11 @@ class ObjectDetector(
         2 to outputScores,
         3 to outputDetectionNum
 
-    //Change for new models version TensorFlow
-    //0 to outputScores,
-    //1 to outputBoundingBoxes,
-    //2 to outputDetectionNum,
-    //3 to outputLabels
+        //Change for new models version TensorFlow
+        //0 to outputScores,
+        //1 to outputBoundingBoxes,
+        //2 to outputDetectionNum,
+        //3 to outputLabels
     )
 
     // Infiera la imagen de vista previa que fluye desde cameraX colocándola en el modelo de detección de objetos.
@@ -101,17 +101,20 @@ class ObjectDetector(
     // infiera y envíe el resultado como una lista
 
     private fun detect(targetImage: Image): List<DetectionObject> {
-        val targetBitmap =
-            Bitmap.createBitmap(targetImage.width, targetImage.height, Bitmap.Config.ARGB_8888)
-        yuvToRgbConverter.yuvToRgb(targetImage, targetBitmap) // conversion a rgb
+        val targetBitmap = Bitmap.createBitmap(targetImage.width, targetImage.height, Bitmap.Config.ARGB_8888)
+        yuvToRgbConverter.yuvToRgb(targetImage, targetBitmap) // Convert to RGB
         tfImageBuffer.load(targetBitmap)
         val tensorImage = tfImageProcessor.process(tfImageBuffer)
 
-        //tflite Realización de inferencias en el modelo
+        // Run inference with the model
         interpreter.runForMultipleInputsOutputs(arrayOf(tensorImage.buffer), outputMap)
 
-        // Dar formato al resultado de la inferencia y devolverlo como una lista
         val detectedObjectList = arrayListOf<DetectionObject>()
+        val centerX = resultViewSize.width / 2
+        val centerY = resultViewSize.height / 2
+        val horizontalBoundary = resultViewSize.width * 0.33f // 33% left and right regions
+        val verticalBoundary = resultViewSize.height * 0.33f  // 33% top and bottom regions
+
         loop@ for (i in 0 until outputDetectionNum[0].toInt()) {
             val score = outputScores[0][i]
             val label = labels[outputLabels[0][i].toInt()]
@@ -122,19 +125,39 @@ class ObjectDetector(
                 outputBoundingBoxes[0][i][2] * resultViewSize.height
             )
 
-            // Agregua solo aquellos que son más grandes que el umbral
+            // Calculate the center of the bounding box
+            val objectCenterX = boundingBox.centerX()
+            val objectCenterY = boundingBox.centerY()
+
+            // Calculate horizontal position
+            val horizontalPosition = when {
+                objectCenterX < horizontalBoundary -> "Left"   // Left third of the screen
+                objectCenterX > resultViewSize.width - horizontalBoundary -> "Right" // Right third
+                else -> "Center" // Center region
+            }
+
+            // Calculate vertical position
+            val verticalPosition = when {
+                objectCenterY < verticalBoundary -> "Top"    // Top third
+                objectCenterY > resultViewSize.height - verticalBoundary -> "Bottom" // Bottom third
+                else -> "Center" // Center region
+            }
+
+            Log.d("PositionCalculation", "Label: $label, Score: $score, Horizontal: $horizontalPosition, Vertical: $verticalPosition")
+
+            // Only add objects with a score above the threshold
             if (score >= SCORE_THRESHOLD) {
                 detectedObjectList.add(
                     DetectionObject(
                         score = score,
                         label = label,
-                        boundingBox = boundingBox
+                        boundingBox = boundingBox,
+                        horizontalPosition = horizontalPosition,
+                        verticalPosition = verticalPosition
                     )
                 )
             } else {
-                    // Los resultados de la detección se clasifican en orden descendente de puntuación,
-                    // por lo que si se supera el umbral, el bucle finaliza.
-                break@loop
+                break@loop // End loop if score is below threshold
             }
         }
         return detectedObjectList.take(4)
