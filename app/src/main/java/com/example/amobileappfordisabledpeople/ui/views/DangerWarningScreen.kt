@@ -213,7 +213,6 @@ fun CameraWarningPreview(
 
                                         // Cập nhật danh sách đối tượng đã phát hiện
                                         Log.d("ObjectDetection", "Previous Detected Objects: ${previousDetectedObjects}")
-
                                         previousDetectedObjects = detectedObjectList.map { it.label }
                                         Log.d("ObjectDetection", "Detected Objects: ${previousDetectedObjects}")
 
