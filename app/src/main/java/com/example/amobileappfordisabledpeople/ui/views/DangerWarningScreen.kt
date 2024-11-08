@@ -2,6 +2,9 @@ package com.example.amobileappfordisabledpeople.ui.views
 
 import android.content.Context
 import android.graphics.Paint
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.util.Size
 import androidx.camera.core.CameraSelector
@@ -215,6 +218,13 @@ fun CameraWarningPreview(
                                         val intersection = dangerousObjects.intersect(previousDetectedObjects).toList()
                                         // Đọc nhãn của đối tượng đầu tiên (hoặc tất cả các đối tượng nếu muốn)
                                         intersection.forEach { detectedObject ->
+                                            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                val vibrationEffect = VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE) // Rung 300ms
+                                                vibrator.vibrate(vibrationEffect)
+                                            } else {
+                                                vibrator.vibrate(300) // Rung 300ms cho các phiên bản cũ hơn
+                                            }
                                             textToSpeech.speak(
                                                 detectedObject,
                                                 TextToSpeech.QUEUE_ADD, // Thêm từng câu vào hàng đợi để đọc tuần tự
