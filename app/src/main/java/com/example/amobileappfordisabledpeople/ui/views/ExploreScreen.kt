@@ -38,7 +38,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -87,7 +89,6 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
     var cameraUri: Uri? = remember {
         null
     }
-
     var cameraImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
 
     val cameraLauncher =
@@ -115,7 +116,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
         }
     }
 
-    val textPrompt = "captioning"
+    val textPrompt = "brief description of the image"
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -148,7 +149,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
         ) {
             if (cameraImageUri != null) {
                 ImageWithBoundingBox(
-                    uri = cameraImageUri!!,
+                    uri = cameraImageUri ?: Uri.EMPTY,
                 ) { h, w, leftDistance ->
                     imageHeight = h
                     imageWidth = w
@@ -221,9 +222,43 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                     Text("Submit")
                 }
 
+                if (uiState is UiState.CaptionResponse) {
+                    DrawCaptionResponse(uiState.result)
+                }
+
             }
         }
     }
+}
+
+@Composable
+private fun DrawCaptionResponse(result: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        TitleText(
+            text = "PaliGemma response:",
+        )
+        Text(
+            text = result,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal,
+            color = Color.White
+        )
+    }
+}
+
+@Composable
+private fun TitleText(text: String) {
+    Text(
+        text = text,
+        fontSize = 20.sp,
+        fontWeight = FontWeight.ExtraBold,
+        color = Color.White
+    )
 }
 
 @Composable
@@ -248,7 +283,6 @@ private fun ImageWithBoundingBox(
                 contentDescription = null
             )
         }
-
     }
 }
 
