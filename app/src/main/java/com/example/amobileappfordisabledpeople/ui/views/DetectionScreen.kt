@@ -51,6 +51,8 @@ import com.example.amobileappfordisabledpeople.ui.navigation.DetectionDestinatio
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -161,6 +163,8 @@ fun CameraPreview(
     BoxWithConstraints(
         modifier = Modifier.fillMaxSize()
     ){
+        val handler = Handler(Looper.getMainLooper())
+        val delayMillis = 1500L  // Thời gian ngắt (1 giây)
         val boxConstraint = this
         val sizeWith = with(LocalDensity.current) { boxConstraint.maxWidth.toPx() }
         val sizeHeight = with(LocalDensity.current) { boxConstraint.maxHeight.toPx() }
@@ -198,12 +202,14 @@ fun CameraPreview(
 
                                         // Đọc nhãn của đối tượng đầu tiên (hoặc tất cả các đối tượng nếu muốn)
                                         detectedObjectList.firstOrNull()?.let { detectedObject ->
-                                            textToSpeech.speak(
-                                                detectedObject.label,
-                                                TextToSpeech.QUEUE_FLUSH,
-                                                null,
-                                                null
-                                            )
+                                            handler.postDelayed({
+                                                textToSpeech.speak(
+                                                    detectedObject.label,
+                                                    TextToSpeech.QUEUE_FLUSH,
+                                                    null,
+                                                    null
+                                                )
+                                            }, delayMillis)
                                         }
                                     }
                                     viewModel.setList(detectedObjectList)

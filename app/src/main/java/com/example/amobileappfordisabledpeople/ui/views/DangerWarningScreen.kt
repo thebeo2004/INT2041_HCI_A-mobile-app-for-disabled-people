@@ -3,6 +3,8 @@ package com.example.amobileappfordisabledpeople.ui.views
 import android.content.Context
 import android.graphics.Paint
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
@@ -227,7 +229,7 @@ fun CameraWarningPreview(
                                             }
                                             textToSpeech.speak(
                                                 detectedObject,
-                                                TextToSpeech.QUEUE_ADD, // Thêm từng câu vào hàng đợi để đọc tuần tự
+                                                TextToSpeech.QUEUE_FLUSH,
                                                 null,
                                                 null
                                             )
