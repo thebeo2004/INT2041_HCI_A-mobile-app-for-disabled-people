@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,10 +36,6 @@ fun ExperimentScreen(
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
     if (!cameraPermissionState.status.isGranted) {
-        //SideEffect: is it really needed to use SideEffect -> Experimenting remove SideEffect later and check the result
-//        SideEffect {
-//            cameraPermissionState.launchPermissionRequest()
-//        }
         CameraPermission(cameraPermissionState)
     }
 
