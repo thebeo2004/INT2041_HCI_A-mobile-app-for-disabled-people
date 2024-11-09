@@ -56,7 +56,7 @@ fun ExperimentScreen(
         verticalArrangement = Arrangement.Center
     ) {
         //Show camera preview once permission is granted
-        if (true) {
+        if (cameraPermissionState.status.isGranted) {
             Box(
                 modifier = Modifier.height((screenHeight * 0.85).dp)
             ) {
