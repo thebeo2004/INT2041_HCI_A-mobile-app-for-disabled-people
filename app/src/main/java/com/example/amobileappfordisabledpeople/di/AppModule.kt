@@ -59,22 +59,12 @@ object AppModule {
             .build()
     }
 
-    @Provides
-    @Singleton
-    fun provideImageAnalysis(): ImageAnalysis {
-        //analyzing image before capturing
-        //often using in ML to analyze image
-        return ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideCameraExecutor(): ExecutorService {
-        //for executing the camera
-        return Executors.newSingleThreadExecutor()
-    }
+//    @Provides
+//    @Singleton
+//    fun provideCameraExecutor(): ExecutorService {
+//        //for executing the camera
+//        return Executors.newSingleThreadExecutor()
+//    }
 
     @Provides
     @Singleton
@@ -83,16 +73,8 @@ object AppModule {
         selector: CameraSelector,
         preview: Preview,
         imageCapture: ImageCapture,
-        cameraExecutor: ExecutorService,
-        analyzer: ImageAnalysis.Analyzer? = null,
+        imageAnalysis: ImageAnalysis
     ): CustomCameraRepo {
-
-        val imageAnalysis = ImageAnalysis.Builder()
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            .apply {
-                analyzer?.let { setAnalyzer(cameraExecutor, it) }
-            }
 
         return CustomCameraRepoImpl(
             cameraProvider = cameraProvider,
