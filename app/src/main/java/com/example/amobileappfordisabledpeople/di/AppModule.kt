@@ -12,6 +12,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import javax.inject.Singleton
 
 //DI: stands for dependency injection, which is responsible for providing the dependencies to other app's components.
@@ -69,13 +71,29 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideCameraExecutor(): ExecutorService {
+        //for executing the camera
+        return Executors.newSingleThreadExecutor()
+    }
+
+    @Provides
+    @Singleton
     fun provideCustomeCameraRepo(
         cameraProvider: ProcessCameraProvider,
         selector: CameraSelector,
         preview: Preview,
         imageCapture: ImageCapture,
-        imageAnalysis: ImageAnalysis
+        cameraExecutor: ExecutorService,
+        analyzer: ImageAnalysis.Analyzer? = null,
     ): CustomCameraRepo {
+
+        val imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .apply {
+                analyzer?.let { setAnalyzer(cameraExecutor, it) }
+            }
+
         return CustomCameraRepoImpl(
             cameraProvider = cameraProvider,
             selector = selector,
