@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -54,6 +55,7 @@ fun ExperimentScreen(
         if (cameraPermissionState.status.isGranted) {
             Box(
                 modifier = Modifier.height((screenHeight * 0.85).dp)
+                    .width((screenWidth).dp)
             ) {
                 //Because Google doesn't have composable for Camera Preview, we're using AndroidView to show it
                 AndroidView(
@@ -63,11 +65,13 @@ fun ExperimentScreen(
                         previewView
                     },
                     modifier = Modifier.height((screenHeight * 0.8).dp)
+                        .width((screenWidth).dp)
                 )
             }
 
             Box(
-                modifier = Modifier.height((screenHeight * 0.8).dp)
+                modifier = Modifier.height((screenHeight * 0.15).dp),
+                contentAlignment = Alignment.Center
             ) {
                 IconButton(
                     onClick = {

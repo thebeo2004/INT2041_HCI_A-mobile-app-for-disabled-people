@@ -12,6 +12,7 @@ import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
+import com.example.amobileappfordisabledpeople.presentation.ExperimentScreen
 import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
 import com.example.amobileappfordisabledpeople.ui.views.ExploreScreen
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -53,11 +54,12 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    App(cameraExecutor = cameraExecutor,
-                        yuvToRgbConverter = yuvToRgbConverter,
-                        interpreter = interpreter,
-                        labels = labels,
-                        textToSpeech = textToSpeech)
+//                    App(cameraExecutor = cameraExecutor,
+//                        yuvToRgbConverter = yuvToRgbConverter,
+//                        interpreter = interpreter,
+//                        labels = labels,
+//                        textToSpeech = textToSpeech)
+                    ExperimentScreen()
                 }
             }
         }
