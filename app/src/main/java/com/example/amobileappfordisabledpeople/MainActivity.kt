@@ -145,7 +145,6 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
         }
         return labels
     }
-
 }
 
 
