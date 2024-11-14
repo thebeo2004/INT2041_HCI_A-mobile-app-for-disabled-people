@@ -1,20 +1,28 @@
 package com.example.amobileappfordisabledpeople
 
 import android.content.res.AssetFileDescriptor
+import android.net.Uri
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import coil.compose.rememberImagePainter
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.example.amobileappfordisabledpeople.presentation.ExperimentScreen
 import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
-import com.example.amobileappfordisabledpeople.ui.views.ExploreScreen
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import org.tensorflow.lite.Interpreter
@@ -32,6 +40,12 @@ import java.util.concurrent.Executors
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
     private lateinit var textToSpeech: TextToSpeech
+
+    private var capturedImageUri by mutableStateOf<Uri?>(null)
+
+    fun updateCapturedImageUri(uri: Uri) {
+        capturedImageUri = uri
+    }
     //------------------------  onCreate ----------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,12 +68,19 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-//                    App(cameraExecutor = cameraExecutor,
-//                        yuvToRgbConverter = yuvToRgbConverter,
-//                        interpreter = interpreter,
-//                        labels = labels,
-//                        textToSpeech = textToSpeech)
-                    ExperimentScreen()
+                    App(cameraExecutor = cameraExecutor,
+                        yuvToRgbConverter = yuvToRgbConverter,
+                        interpreter = interpreter,
+                        labels = labels,
+                        textToSpeech = textToSpeech)
+//                    ExperimentScreen()
+//                    capturedImageUri?.let {uri ->
+//                        Image(
+//                            painter = rememberImagePainter(uri),
+//                            contentDescription = null,
+//                            modifier = Modifier.fillMaxWidth().height(200.dp)
+//                        )
+//                    }
                 }
             }
         }

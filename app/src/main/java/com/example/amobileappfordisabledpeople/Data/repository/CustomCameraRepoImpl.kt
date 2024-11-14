@@ -1,10 +1,7 @@
 package com.example.amobileappfordisabledpeople.Data.repository
 
-import android.content.ContentValues
 import android.content.Context
-import android.os.Build
-import android.provider.MediaStore
-import android.util.Log
+import android.net.Uri
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -15,7 +12,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import com.example.amobileappfordisabledpeople.MainActivity
 import com.example.amobileappfordisabledpeople.domain.repository.CustomCameraRepo
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
@@ -38,23 +37,11 @@ class CustomCameraRepoImpl @Inject constructor(
             Locale.ENGLISH
         ).format(System.currentTimeMillis())
 
+        //Store captured image in cache
+        val file = File(context.cacheDir, name)
 
-        // for storing
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME,name)
-            put(MediaStore.MediaColumns.MIME_TYPE,"image/jpeg")
-            if (Build.VERSION.SDK_INT > 28){
-                put(MediaStore.Images.Media.RELATIVE_PATH,"Pictures/My-Camera-App-Images")
-            }
-        }
-
-        // for capture output
         val outputOptions = ImageCapture.OutputFileOptions
-            .Builder(
-                context.contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues
-            )
+            .Builder(file)
             .build()
 
         imageCapture.takePicture(
@@ -64,9 +51,10 @@ class CustomCameraRepoImpl @Inject constructor(
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                     Toast.makeText(
                         context,
-                        "Saved image ${outputFileResults.savedUri!!}",
+                        "Saved image ${file.absolutePath}",
                         Toast.LENGTH_LONG
                     ).show()
+                    (context as MainActivity).updateCapturedImageUri(Uri.fromFile(file))
                 }
 
                 override fun onError(exception: ImageCaptureException) {
@@ -80,9 +68,6 @@ class CustomCameraRepoImpl @Inject constructor(
         )
 
     }
-
-
-
 
     override suspend fun showCameraPreview(
         previewView: PreviewView,
