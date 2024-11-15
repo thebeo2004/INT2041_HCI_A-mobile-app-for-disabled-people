@@ -44,6 +44,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.example.amobileappfordisabledpeople.AppBar
 import com.example.amobileappfordisabledpeople.features.object_detection.ObjectDetector
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
+import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.example.amobileappfordisabledpeople.ui.navigation.DangerWarningDestination
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -125,7 +126,6 @@ fun OpenWarningCamera(
     textToSpeech: TextToSpeech, // Nhận TextToSpeech,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     Column(
@@ -136,7 +136,6 @@ fun OpenWarningCamera(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CameraWarningPreview(
-            context = context,
             lifecycleOwner = lifecycleOwner,
             cameraExecutor = cameraExecutor,
             yuvToRgbConverter = yuvToRgbConverter,
@@ -149,21 +148,15 @@ fun OpenWarningCamera(
 
 @Composable
 fun CameraWarningPreview(
-    context: Context,
     lifecycleOwner: LifecycleOwner,
     cameraExecutor: ExecutorService,
     yuvToRgbConverter: YuvToRgbConverter,
     interpreter: Interpreter,
     labels: List<String>,
     viewModel: DetectionViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     textToSpeech: TextToSpeech // Nhận TextToSpeech từ OpenWarningCamera
 ) {
-    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
-    var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
-    var preview by remember { mutableStateOf<androidx.camera.core.Preview?>(null) }
-    val executor = ContextCompat.getMainExecutor(context)
-    val cameraProvider = cameraProviderFuture.get()
-
     val drawCanvas by remember { viewModel.isLoading }
     val detectionListObject by remember { viewModel.detectionList }
 
@@ -183,71 +176,56 @@ fun CameraWarningPreview(
         val sizeWith = with(LocalDensity.current) { boxConstraint.maxWidth.toPx() }
         val sizeHeight = with(LocalDensity.current) { boxConstraint.maxHeight.toPx() }
 
+        var previousDetectedObjects: List<String> = emptyList()
+
+        val imageAnalyzer = ImageAnalysis.Builder()
+            .setTargetRotation(android.view.Surface.ROTATION_0)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also {
+                it.setAnalyzer(
+                    cameraExecutor,
+                    ObjectDetector(
+                        yuvToRgbConverter = yuvToRgbConverter,
+                        interpreter = interpreter,
+                        labels = labels,
+                        resultViewSize = Size(sizeWith.toInt(), sizeHeight.toInt()
+                        )
+                    ) { detectedObjectList ->
+                        // So sánh danh sách đối tượng hiện tại với danh sách trước đó
+                        var check: Boolean = detectedObjectList.map { it.label } == previousDetectedObjects
+                        Log.d ("Check", "Check: ${check}")
+                        if (detectedObjectList.isNotEmpty() && !check) {
+
+                            // Cập nhật danh sách đối tượng đã phát hiện
+                            Log.d("ObjectDetection", "Previous Detected Objects: ${previousDetectedObjects}")
+
+                            previousDetectedObjects = detectedObjectList.map { it.label }
+                            Log.d("ObjectDetection", "Detected Objects: ${previousDetectedObjects}")
+
+                            val intersection = dangerousObjects.intersect(previousDetectedObjects).toList()
+                            // Đọc nhãn của đối tượng đầu tiên (hoặc tất cả các đối tượng nếu muốn)
+                            intersection.forEach { detectedObject ->
+                                textToSpeech.speak(
+                                    detectedObject,
+                                    TextToSpeech.QUEUE_ADD, // Thêm từng câu vào hàng đợi để đọc tuần tự
+                                    null,
+                                    null
+                                )
+                            }
+                        }
+                        viewModel.setList(detectedObjectList)
+                    }
+                )
+            }
+
+        mainViewModel.initRepo(imageAnalyzer)
+
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
                 val previewView = PreviewView(ctx)
-                cameraProviderFuture.addListener({
-                    var previousDetectedObjects: List<String> = emptyList()
-                    val imageAnalyzer = ImageAnalysis.Builder()
-                        .setTargetRotation(android.view.Surface.ROTATION_0)
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                        .also {
-                            it.setAnalyzer(
-                                cameraExecutor,
-                                ObjectDetector(
-                                    yuvToRgbConverter = yuvToRgbConverter,
-                                    interpreter = interpreter,
-                                    labels = labels,
-                                    resultViewSize = Size(sizeWith.toInt(), sizeHeight.toInt()
-                                    )
-                                ) { detectedObjectList ->
-                                    // So sánh danh sách đối tượng hiện tại với danh sách trước đó
-                                    var check: Boolean = detectedObjectList.map { it.label } == previousDetectedObjects
-                                    Log.d ("Check", "Check: ${check}")
-                                    if (detectedObjectList.isNotEmpty() && !check) {
-
-                                        // Cập nhật danh sách đối tượng đã phát hiện
-                                        Log.d("ObjectDetection", "Previous Detected Objects: ${previousDetectedObjects}")
-
-                                        previousDetectedObjects = detectedObjectList.map { it.label }
-                                        Log.d("ObjectDetection", "Detected Objects: ${previousDetectedObjects}")
-
-                                        val intersection = dangerousObjects.intersect(previousDetectedObjects).toList()
-                                        // Đọc nhãn của đối tượng đầu tiên (hoặc tất cả các đối tượng nếu muốn)
-                                        intersection.forEach { detectedObject ->
-                                            textToSpeech.speak(
-                                                detectedObject,
-                                                TextToSpeech.QUEUE_ADD, // Thêm từng câu vào hàng đợi để đọc tuần tự
-                                                null,
-                                                null
-                                            )
-                                        }
-                                    }
-                                    viewModel.setList(detectedObjectList)
-                                }
-                            )
-                        }
-
-                    imageCapture = ImageCapture.Builder()
-                        .setTargetRotation(previewView.display.rotation)
-                        .build()
-
-                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        cameraSelector,
-                        imageCapture,
-                        preview,
-                        imageAnalyzer
-                    )
-                }, executor)
-                preview = androidx.camera.core.Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
-                }
+                mainViewModel.showCameraPreview(previewView, lifecycleOwner)
                 previewView
             }
         )
