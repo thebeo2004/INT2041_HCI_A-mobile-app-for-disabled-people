@@ -1,14 +1,10 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
-import android.content.Context
 import android.graphics.Paint
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.util.Size
-import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageCapture
-import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -21,9 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -32,18 +26,17 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
 import com.example.amobileappfordisabledpeople.AppBar
 import com.example.amobileappfordisabledpeople.features.object_detection.ObjectDetector
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
+import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.example.amobileappfordisabledpeople.ui.navigation.DetectionDestination
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -106,7 +99,6 @@ fun OpenCamera(
     textToSpeech: TextToSpeech, // Nhận TextToSpeech,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     Column(
@@ -117,7 +109,6 @@ fun OpenCamera(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CameraPreview(
-            context = context,
             lifecycleOwner = lifecycleOwner,
             cameraExecutor = cameraExecutor,
             yuvToRgbConverter = yuvToRgbConverter,
@@ -130,27 +121,15 @@ fun OpenCamera(
 
 @Composable
 fun CameraPreview(
-    context: Context,
     lifecycleOwner: LifecycleOwner,
     cameraExecutor: ExecutorService,
     yuvToRgbConverter: YuvToRgbConverter,
     interpreter: Interpreter,
     labels: List<String>,
     viewModel: DetectionViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel(),
     textToSpeech: TextToSpeech
 ) {
-    //ProcessCameraProvider: fetching the camera provider
-    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
-    val cameraProvider = cameraProviderFuture.get()
-
-    //ImageCapture: basic taking the picture
-    var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
-
-    //Preview: showing the preview of camera
-    var preview by remember { mutableStateOf<androidx.camera.core.Preview?>(null) }
-    val executor = ContextCompat.getMainExecutor(context)
-
-
     val drawCanvas by remember { viewModel.isLoading }
     val detectionListObject by remember { viewModel.detectionList }
 
@@ -170,78 +149,56 @@ fun CameraPreview(
         val sizeWith = with(LocalDensity.current) { boxConstraint.maxWidth.toPx() }
         val sizeHeight = with(LocalDensity.current) { boxConstraint.maxHeight.toPx() }
 
+        var previousDetectedObjects: List<String> = emptyList()
+
+        // Image analysis -> Detect objects in real-time
+        val imageAnalyzer = ImageAnalysis.Builder()
+            .setTargetRotation(android.view.Surface.ROTATION_0)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also {
+                it.setAnalyzer(
+                    cameraExecutor,
+                    ObjectDetector(
+                        yuvToRgbConverter = yuvToRgbConverter,
+                        interpreter = interpreter,
+                        labels = labels,
+                        resultViewSize = Size(sizeWith.toInt(), sizeHeight.toInt()
+                        )
+                    ) { detectedObjectList ->
+                        // So sánh danh sách đối tượng hiện tại với danh sách trước đó
+                        var check: Boolean = detectedObjectList.map { it.label } == previousDetectedObjects
+                        Log.d ("Check", "Check: ${check}")
+                        if (detectedObjectList.isNotEmpty() && !check) {
+
+                            // Cập nhật danh sách đối tượng đã phát hiện
+                            Log.d("ObjectDetection", "Previous Detected Objects: ${previousDetectedObjects}")
+
+                            previousDetectedObjects = detectedObjectList.map { it.label }
+                            Log.d("ObjectDetection", "Detected Objects: ${previousDetectedObjects}")
+
+                            // Đọc nhãn của đối tượng đầu tiên (hoặc tất cả các đối tượng nếu muốn)
+                            detectedObjectList.firstOrNull()?.let { detectedObject ->
+                                textToSpeech.speak(
+                                    detectedObject.label,
+                                    TextToSpeech.QUEUE_FLUSH,
+                                    null,
+                                    null
+                                )
+                            }
+                        }
+                        viewModel.setList(detectedObjectList)
+                    }
+                )
+            }
+
+        mainViewModel.initRepo(imageAnalyzer)
+
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
                 val previewView = PreviewView(ctx)
-                cameraProviderFuture.addListener({
-                    var previousDetectedObjects: List<String> = emptyList()
-
-                    // Image analysis -> Detect objects in real-time
-                    val imageAnalyzer = ImageAnalysis.Builder()
-                        .setTargetRotation(android.view.Surface.ROTATION_0)
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                        .also {
-                            it.setAnalyzer(
-                                cameraExecutor,
-                                ObjectDetector(
-                                    yuvToRgbConverter = yuvToRgbConverter,
-                                    interpreter = interpreter,
-                                    labels = labels,
-                                    resultViewSize = Size(sizeWith.toInt(), sizeHeight.toInt()
-                                    )
-                                ) { detectedObjectList ->
-                                    // So sánh danh sách đối tượng hiện tại với danh sách trước đó
-                                    var check: Boolean = detectedObjectList.map { it.label } == previousDetectedObjects
-                                    Log.d ("Check", "Check: ${check}")
-                                    if (detectedObjectList.isNotEmpty() && !check) {
-
-                                        // Cập nhật danh sách đối tượng đã phát hiện
-                                        Log.d("ObjectDetection", "Previous Detected Objects: ${previousDetectedObjects}")
-
-                                        previousDetectedObjects = detectedObjectList.map { it.label }
-                                        Log.d("ObjectDetection", "Detected Objects: ${previousDetectedObjects}")
-
-                                        // Đọc nhãn của đối tượng đầu tiên (hoặc tất cả các đối tượng nếu muốn)
-                                        detectedObjectList.firstOrNull()?.let { detectedObject ->
-                                            textToSpeech.speak(
-                                                detectedObject.label,
-                                                TextToSpeech.QUEUE_FLUSH,
-                                                null,
-                                                null
-                                            )
-                                        }
-                                    }
-                                    viewModel.setList(detectedObjectList)
-                                }
-                            )
-                            }
-                    // Taking picture
-                    imageCapture = ImageCapture.Builder()
-                        .setTargetRotation(previewView.display.rotation)
-                        .build()
-
-                    // Select back camera as a default
-                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-                    // Unbind old use cases before rebinding
-                    cameraProvider.unbindAll()
-
-                    // Bind new use cases to camera
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        cameraSelector,
-                        imageCapture,
-                        preview,
-                        imageAnalyzer
-                    )
-                }, executor)
-
-                // Preview display -> Display image from camera visually on UI using previewView
-                preview = androidx.camera.core.Preview.Builder().build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
-                }
+                mainViewModel.showCameraPreview(previewView, lifecycleOwner)
                 previewView
             }
         )

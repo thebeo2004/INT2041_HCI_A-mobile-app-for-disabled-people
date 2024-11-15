@@ -1,7 +1,6 @@
 package com.example.amobileappfordisabledpeople.di
 
 import android.app.Application
-import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
@@ -17,48 +16,64 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+//DI: stands for dependency injection, which is responsible for providing the dependencies to other app's components.
+
+//Mark this object as a dagger module where provides  for Dagger Hilt
 @Module
+//Determine lifecycle scope of this module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
     @Provides
+    //Mark this method is sole, only one instance of this object will be created
     @Singleton
     fun provideCameraSelector(): CameraSelector {
         return CameraSelector.Builder()
+            //Can choose between front or back camera
             .requireLensFacing(CameraSelector.LENS_FACING_BACK)
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideCameraProvider(application: Application)
-            : ProcessCameraProvider {
+    fun provideCameraProvider(application: Application): ProcessCameraProvider{
+        //for providing camera instance
         return ProcessCameraProvider.getInstance(application).get()
-
     }
 
     @Provides
     @Singleton
     fun provideCameraPreview(): Preview {
+        //for previewing the camera
         return Preview.Builder().build()
     }
 
     @Provides
     @Singleton
     fun provideImageCapture(): ImageCapture {
+        //for capturing image from camera
+        //ignoring the apect ration
         return ImageCapture.Builder()
             .setFlashMode(FLASH_MODE_ON)
-            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
             .build()
     }
 
     @Provides
     @Singleton
     fun provideImageAnalysis(): ImageAnalysis {
+        //analyzing image before capturing
+        //often using in ML to analyze image
         return ImageAnalysis.Builder()
             .setBackpressureStrategy(STRATEGY_KEEP_ONLY_LATEST)
             .build()
     }
+
+    //    @Provides
+//    @Singleton
+//    fun provideCameraExecutor(): ExecutorService {
+//        //for executing the camera
+//        return Executors.newSingleThreadExecutor()
+//    }
 
     @Provides
     @Singleton
@@ -70,12 +85,11 @@ object AppModule {
         preview: Preview
     ): CustomCameraRepo {
         return CustomCameraRepoImpl(
-            cameraProvider,
-            selector,
-            preview,
-            imageAnalysis,
-            imageCapture
+            cameraProvider = cameraProvider,
+            selector = selector,
+            preview = preview,
+            imageCapture = imageCapture,
+            imageAnalysis = imageAnalysis
         )
     }
-
 }
