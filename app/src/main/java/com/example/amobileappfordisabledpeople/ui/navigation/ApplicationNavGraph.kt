@@ -7,12 +7,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
+import com.example.amobileappfordisabledpeople.ui.views.CameraPermission
 import com.example.amobileappfordisabledpeople.ui.views.DangerWarningScreen
 import com.example.amobileappfordisabledpeople.ui.views.DetectionScreen
 import com.example.amobileappfordisabledpeople.ui.views.ExploreScreen
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ApplicationNavHost(
     navController: NavHostController,
@@ -23,6 +28,14 @@ fun ApplicationNavHost(
     textToSpeech: TextToSpeech,
     modifier: Modifier = Modifier
 ) {
+
+    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+
+    if (cameraPermissionState.status.isGranted) {
+    } else {
+        CameraPermission(cameraPermissionState)
+    }
+
     NavHost(
         navController = navController,
         startDestination = DetectionDestination.route,

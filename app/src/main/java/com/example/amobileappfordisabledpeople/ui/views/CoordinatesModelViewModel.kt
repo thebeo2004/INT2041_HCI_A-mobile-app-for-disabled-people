@@ -35,11 +35,6 @@ class CoordinatesModelViewModel(
                     .body()
 
                 uiState = when {
-                    coordinatesModel?.result != null -> {
-                        UiState.ObjectDetectionResponse(
-                            getObjectDetectionUiData(coordinatesModel.result)
-                        )
-                    }
 
                     coordinatesModel?.response != null -> {
                         UiState.CaptionResponse(coordinatesModel.response)

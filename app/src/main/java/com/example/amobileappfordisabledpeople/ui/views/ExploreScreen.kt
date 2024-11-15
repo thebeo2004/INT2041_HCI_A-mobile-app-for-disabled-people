@@ -1,55 +1,65 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
-import android.content.Context
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Clear
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.FileProvider
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.amobileappfordisabledpeople.Data.RequestModel
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepoImpl
-import com.example.amobileappfordisabledpeople.ui.navigation.ExploreDestination
-import com.example.amobileappfordisabledpeople.ui.views.ObjectDetectionUiData
-import com.example.amobileappfordisabledpeople.ui.views.UiState
+import com.example.amobileappfordisabledpeople.Data.RequestModel
+import com.example.amobileappfordisabledpeople.presentation.MainViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
-import java.io.File
-import java.util.Objects
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.ui.input.pointer.pointerInput
-import com.example.amobileappfordisabledpeople.AppBar
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.layout.positionInRoot
 
-
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ExploreScreen(
-    navigateToDangerWarning: () -> Unit = {},
-    navigateToDetection: () -> Unit = {}
+fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
+                  navigateToDetection: () -> Unit = {},
+                  mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
 
@@ -64,37 +74,16 @@ fun ExploreScreen(
         )
     )
     val uiState = viewModel.uiState
+    var showCameraPreview by rememberSaveable { mutableStateOf(false) }
+    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
-    var cameraImageFile: File? = context.createImageFile()
-    var cameraUri: Uri = FileProvider.getUriForFile(
-        Objects.requireNonNull(context),
-        context.packageName + ".provider",
-        cameraImageFile!!
-    )
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp
+    val screenWidth = configuration.screenWidthDp
+    var previewView: PreviewView
 
-    var galleryImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-    var cameraImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-
-    val cameraLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
-            if (it) {
-                galleryImageUri = null
-                cameraImageUri = cameraUri
-                viewModel.resetData()
-            }
-        }
-
-    var textPrompt by rememberSaveable { mutableStateOf("") }
-
-    val pickMedia = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            viewModel.resetData()
-            cameraImageUri = null
-            galleryImageUri = it
-        }
-    }
+    val textPrompt = "brief description of the image"
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -105,17 +94,7 @@ fun ExploreScreen(
             }
         }
     }
-
     Scaffold(
-        modifier = Modifier.pointerInput(Unit) {
-            detectHorizontalDragGestures { change, dragAmount ->
-                if (dragAmount < 0) {
-                    navigateToDetection()
-                } else {
-                    navigateToDangerWarning()
-                }
-            }
-        },
         containerColor = Color.Black,
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState) {
@@ -125,9 +104,6 @@ fun ExploreScreen(
                     contentColor = Color.White
                 )
             }
-        },
-        topBar = {
-            AppBar(destinationName = stringResource(ExploreDestination.titleRes))
         }
     ) { it ->
         Column(
@@ -138,19 +114,18 @@ fun ExploreScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (galleryImageUri != null || cameraImageUri != null) {
-                Log.d("ImageURI", "Gallery Image URI: $galleryImageUri")
-                Log.d("ImageURI", "Camera Image URI: $cameraImageUri")
-
+            mainViewModel.capturedImageUri.value?.let {
                 ImageWithBoundingBox(
-                    uri = galleryImageUri ?: cameraImageUri!!,
-                    objectDetectionUiData = (uiState as? UiState.ObjectDetectionResponse)?.result,
-                ) { h, w, leftDistance ->
-                    imageHeight = h
-                    imageWidth = w
-                    viewModel.imageLeftDistance = leftDistance
+                    uri = it
+                ) { height, width, _ ->
+                    imageHeight = height
+                    imageWidth = width
                 }
-            }
+            } ?: Text(
+                text = "No image captured",
+                fontSize = 16.sp,
+                color = Color.White
+            )
 
             if (uiState is UiState.Loading) {
                 CircularProgressIndicator(color = Color(0xFF29B6F6))
@@ -164,7 +139,7 @@ fun ExploreScreen(
                 ) {
                     Button(
                         onClick = {
-                            cameraLauncher.launch(cameraUri)
+                            showCameraPreview = true
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -178,45 +153,56 @@ fun ExploreScreen(
                     }
                 }
 
-                OutlinedTextField(
-                    value = textPrompt,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF29B6F6),
-                        unfocusedBorderColor = Color(0xFF29B6F6),
-                        focusedLabelColor = Color(0xFF29B6F6),
-                        unfocusedLabelColor = Color(0xFF29B6F6),
-                        focusedPlaceholderColor = Color(0xFFF5F5F5),
-                        unfocusedPlaceholderColor = Color(0xFFF5F5F5),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        cursorColor = Color.White
-                    ),
-                    label = { Text("Prompt") },
-                    onValueChange = { textPrompt = it },
-                    placeholder = { Text("Enter text prompt") },
-                    modifier = Modifier
-                        .padding(all = 4.dp)
-                        .align(Alignment.CenterHorizontally),
-                    trailingIcon = if (textPrompt.isNotEmpty()) {
-                        {
-                            IconButton(onClick = { textPrompt = "" }) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Clear,
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                    } else {
-                        null
+                if (showCameraPreview) {
+                    Box(
+                        modifier = Modifier
+                            .height((screenHeight * 0.8).dp)
+                            .width((screenWidth).dp)
+                    ) {
+                        AndroidView(
+                            factory = {
+                                previewView = PreviewView(it)
+                                mainViewModel.showCameraPreview(previewView = previewView, lifecycleOwner = lifecycleOwner)
+                                previewView
+                            },
+                            modifier = Modifier
+                                .height((screenHeight * 0.8).dp)
+                                .width((screenWidth).dp)
+                        )
                     }
-                )
+
+                    Box(
+                        modifier = Modifier
+                            .height((screenHeight * 0.15).dp)
+                            .padding(all = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Button(
+                            onClick = {
+                                if (cameraPermissionState.status.isGranted) {
+                                    mainViewModel.captureAndSave(context) {
+                                        showCameraPreview = false
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Camera permission not granted", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF29B6F6),
+                                contentColor = Color(0xFFFFFFFF)
+                            )
+                        ) {
+                            Text("Capture Image")
+                        }
+                    }
+                }
 
                 Button(
                     onClick = {
                         viewModel.getCoordinatesModel(
                             requestModel = RequestModel(
                                 text = textPrompt,
-                                uri = galleryImageUri ?: cameraImageUri ?: Uri.EMPTY,
+                                uri = mainViewModel.capturedImageUri.value ?: Uri.EMPTY,
                                 height = imageHeight.toString(),
                                 width = imageWidth.toString()
                             )
@@ -243,9 +229,38 @@ fun ExploreScreen(
 }
 
 @Composable
+private fun DrawCaptionResponse(result: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        TitleText(
+            text = "PaliGemma response:",
+        )
+        Text(
+            text = result,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal,
+            color = Color.White
+        )
+    }
+}
+
+@Composable
+private fun TitleText(text: String) {
+    Text(
+        text = text,
+        fontSize = 20.sp,
+        fontWeight = FontWeight.ExtraBold,
+        color = Color.White
+    )
+}
+
+@Composable
 private fun ImageWithBoundingBox(
     uri: Uri,
-    objectDetectionUiData: List<ObjectDetectionUiData>?,
     onSizeChange: (Int, Int, Float) -> Unit
 ) {
     Box {
@@ -265,78 +280,6 @@ private fun ImageWithBoundingBox(
                 contentDescription = null
             )
         }
-
-        objectDetectionUiData?.let {
-            DrawObjectDetectionResponse(results = objectDetectionUiData)
-        }
     }
 }
 
-@Composable
-private fun DrawObjectDetectionResponse(results: List<ObjectDetectionUiData>) {
-    //initial height set at 0.dp
-    val textMeasurer = rememberTextMeasurer()
-    results.forEach { result ->
-        Canvas(modifier = Modifier) {
-            drawRect(
-                color = result.color,
-                style = Stroke(width = 5f),
-                topLeft = result.topLeft,
-                size = result.size
-            )
-            drawText(
-                textMeasurer = textMeasurer,
-                topLeft = result.textTopLeft,
-                text = result.text,
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    background = result.color
-                ),
-                size = result.size
-            )
-        }
-    }
-}
-
-fun Context.createImageFile(): File {
-    // Create an image file name
-    val timeStamp = System.currentTimeMillis().toString()
-    val imageFileName = "JPEG_" + timeStamp + "_"
-    val image = File.createTempFile(
-        imageFileName, /* prefix */
-        ".jpg", /* suffix */
-        externalCacheDir      /* directory */
-    )
-    return image
-}
-
-@Composable
-private fun DrawCaptionResponse(result: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-        TitleText(
-            text = "PaliGemma response:",
-        )
-        Text(
-            text = result,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Normal,
-            color = Color.White
-        )
-    }
-}
-@Composable
-private fun TitleText(text: String) {
-    Text(
-        text = text,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.ExtraBold,
-        color = Color.White
-    )
-}
