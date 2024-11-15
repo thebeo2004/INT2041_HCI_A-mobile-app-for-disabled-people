@@ -1,18 +1,17 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
-import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -37,40 +36,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepoImpl
 import com.example.amobileappfordisabledpeople.Data.RequestModel
+import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
-import java.io.File
-import java.util.Objects
-
-fun Context.createImageFile(): File {
-    // Create an image file name
-    val timeStamp = System.currentTimeMillis().toString()
-    val imageFileName = "JPEG_" + timeStamp + "_"
-    val image = File.createTempFile(
-        imageFileName, /* prefix */
-        ".jpg", /* suffix */
-        externalCacheDir      /* directory */
-    )
-    return image
-}
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
-                  navigateToDetection: () -> Unit = {}) {
+                  navigateToDetection: () -> Unit = {},
+                  mainViewModel: MainViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
 
     var imageHeight by remember { mutableIntStateOf(0) }
@@ -84,37 +74,14 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
         )
     )
     val uiState = viewModel.uiState
-
-    var cameraImageFile: File?
-    var cameraUri: Uri? = remember {
-        null
-    }
-    var cameraImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
-
-    val cameraLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
-            if (it) {
-                cameraImageUri = cameraUri
-                viewModel.resetData()
-            }
-        }
-
+    var showCameraPreview by rememberSaveable { mutableStateOf(false) }
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
-    LaunchedEffect(key1 = cameraPermissionState.status.isGranted) {
-        if (cameraPermissionState.status.isGranted) {
-            cameraImageFile = context.createImageFile()
-            cameraUri = FileProvider.getUriForFile(
-                context,
-                context.packageName + ".provider",
-                cameraImageFile!!
-            )
-            Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
-            cameraPermissionState.launchPermissionRequest()
-        }
-    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp
+    val screenWidth = configuration.screenWidthDp
+    var previewView: PreviewView
 
     val textPrompt = "brief description of the image"
 
@@ -147,15 +114,18 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (cameraImageUri != null) {
+            mainViewModel.capturedImageUri.value?.let {
                 ImageWithBoundingBox(
-                    uri = cameraImageUri ?: Uri.EMPTY,
-                ) { h, w, leftDistance ->
-                    imageHeight = h
-                    imageWidth = w
-                    viewModel.imageLeftDistance = leftDistance
+                    uri = it
+                ) { height, width, _ ->
+                    imageHeight = height
+                    imageWidth = width
                 }
-            }
+            } ?: Text(
+                text = "No image captured",
+                fontSize = 16.sp,
+                color = Color.White
+            )
 
             if (uiState is UiState.Loading) {
                 CircularProgressIndicator(color = Color(0xFF29B6F6))
@@ -169,29 +139,12 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                 ) {
                     Button(
                         onClick = {
-                            cameraImageFile = context.createImageFile()
-                            cameraUri = FileProvider.getUriForFile(
-                                Objects.requireNonNull(context),
-                                context.packageName + ".provider", cameraImageFile!!
-                            )
-
-                            val permissionCheckResult =
-                                ContextCompat.checkSelfPermission(
-                                    context,
-                                    android.Manifest.permission.CAMERA
-                                )
-                            if (permissionCheckResult == PackageManager.PERMISSION_GRANTED) {
-                                cameraLauncher.launch(cameraUri!!)
-                            } else {
-                                // Request a permission
-                                cameraPermissionState.launchPermissionRequest()
-                            }
+                            showCameraPreview = true
                         },
                         modifier = Modifier
                             .weight(1f)
                             .padding(all = 4.dp),
                         colors = ButtonDefaults.buttonColors(
-                            // Old color = #1A73E8
                             containerColor = Color(0xFF29B6F6),
                             contentColor = Color(0xFFFFFFFF)
                         )
@@ -200,12 +153,56 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                     }
                 }
 
+                if (showCameraPreview) {
+                    Box(
+                        modifier = Modifier
+                            .height((screenHeight * 0.8).dp)
+                            .width((screenWidth).dp)
+                    ) {
+                        AndroidView(
+                            factory = {
+                                previewView = PreviewView(it)
+                                mainViewModel.showCameraPreview(previewView = previewView, lifecycleOwner = lifecycleOwner)
+                                previewView
+                            },
+                            modifier = Modifier
+                                .height((screenHeight * 0.8).dp)
+                                .width((screenWidth).dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .height((screenHeight * 0.15).dp)
+                            .padding(all = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Button(
+                            onClick = {
+                                if (cameraPermissionState.status.isGranted) {
+                                    mainViewModel.captureAndSave(context) {
+                                        showCameraPreview = false
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Camera permission not granted", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF29B6F6),
+                                contentColor = Color(0xFFFFFFFF)
+                            )
+                        ) {
+                            Text("Capture Image")
+                        }
+                    }
+                }
+
                 Button(
                     onClick = {
                         viewModel.getCoordinatesModel(
                             requestModel = RequestModel(
                                 text = textPrompt,
-                                uri = cameraImageUri ?: Uri.EMPTY,
+                                uri = mainViewModel.capturedImageUri.value ?: Uri.EMPTY,
                                 height = imageHeight.toString(),
                                 width = imageWidth.toString()
                             )

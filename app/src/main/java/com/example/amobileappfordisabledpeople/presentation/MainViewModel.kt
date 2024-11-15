@@ -1,7 +1,9 @@
 package com.example.amobileappfordisabledpeople.presentation
 
 import android.content.Context
+import android.net.Uri
 import androidx.camera.view.PreviewView
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,6 +17,9 @@ class MainViewModel @Inject constructor(
     private val repo: CustomCameraRepo
 ): ViewModel() {
 
+    var capturedImageUri = mutableStateOf<Uri?>(null)
+        private set
+
     fun showCameraPreview(
         previewView: PreviewView,
         lifecycleOwner: LifecycleOwner,
@@ -27,9 +32,17 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun captureAndSave(context: Context) {
+    fun captureAndSave(context: Context, onImageCaptured: () -> Unit = {}) {
         viewModelScope.launch {
-            repo.captureAndSaveImage(context)
+            repo.captureAndSaveImage(context) { uri ->
+                updateCapturedImageUri(uri)
+                onImageCaptured()
+            }
+
         }
+    }
+
+    fun updateCapturedImageUri(uri: Uri) {
+        capturedImageUri.value = uri
     }
 }

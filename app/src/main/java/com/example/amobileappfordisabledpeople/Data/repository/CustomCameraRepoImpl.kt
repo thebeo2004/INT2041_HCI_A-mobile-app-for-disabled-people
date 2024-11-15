@@ -12,7 +12,6 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import com.example.amobileappfordisabledpeople.MainActivity
 import com.example.amobileappfordisabledpeople.domain.repository.CustomCameraRepo
 import java.io.File
 import java.text.SimpleDateFormat
@@ -28,8 +27,7 @@ class CustomCameraRepoImpl @Inject constructor(
 ):CustomCameraRepo {
 
 
-    override suspend fun captureAndSaveImage(
-        context: Context) {
+    override suspend fun captureAndSaveImage(context: Context, onImageCaptured: (Uri) -> Unit) {
 
         //for file name
         val name = SimpleDateFormat(
@@ -54,7 +52,7 @@ class CustomCameraRepoImpl @Inject constructor(
                         "Saved image ${file.absolutePath}",
                         Toast.LENGTH_LONG
                     ).show()
-                    (context as MainActivity).updateCapturedImageUri(Uri.fromFile(file))
+                    onImageCaptured(Uri.fromFile(file))
                 }
 
                 override fun onError(exception: ImageCaptureException) {
