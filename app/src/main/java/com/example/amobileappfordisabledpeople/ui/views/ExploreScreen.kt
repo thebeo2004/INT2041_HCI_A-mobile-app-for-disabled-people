@@ -1,6 +1,9 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -10,13 +13,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -25,6 +25,8 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,17 +55,41 @@ import coil.request.ImageRequest
 import com.example.amobileappfordisabledpeople.AppBar
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepoImpl
 import com.example.amobileappfordisabledpeople.Data.RequestModel
+import com.example.amobileappfordisabledpeople.SpeechRecognizerContract
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
+import com.example.amobileappfordisabledpeople.presentation.SpeechRecognizerViewModel
 import com.example.amobileappfordisabledpeople.ui.navigation.ExploreDestination
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                   navigateToDetection: () -> Unit = {},
-                  mainViewModel: MainViewModel = hiltViewModel()
+                  mainViewModel: MainViewModel = hiltViewModel(),
+                  speechRecognizerViewModel: SpeechRecognizerViewModel = viewModel()
 ) {
+
+    val audioPermissionState = rememberPermissionState(android.Manifest.permission.RECORD_AUDIO)
+
+    SideEffect {
+        if (!audioPermissionState.status.isGranted) {
+            audioPermissionState.launchPermissionRequest()
+        }
+    }
+
+    val speechRecognizerLauncher = rememberLauncherForActivityResult(
+        contract = SpeechRecognizerContract(),
+        onResult = {
+            //Here we get the text
+            speechRecognizerViewModel.changeTextValue(it.toString())
+        }
+    )
+
+    val speechRecognizerState by speechRecognizerViewModel.state.collectAsState()
+
     val context = LocalContext.current
 
     var imageHeight by remember { mutableIntStateOf(0) }
@@ -85,8 +111,6 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
     val screenWidth = configuration.screenWidthDp
     var previewView: PreviewView
 
-    val textPrompt = "brief description of the image"
-
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     LaunchedEffect(key1 = uiState) {
@@ -96,6 +120,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
             }
         }
     }
+
     Scaffold(
         containerColor = Color.Black,
         snackbarHost = {
@@ -126,15 +151,24 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
             modifier = Modifier
                 .padding(it)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .verticalScroll(rememberScrollState())
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            if (!showCameraPreview) {
+                                speechRecognizerLauncher.launch(Unit)
+                            }
+                        }
+                    )
+                },
+
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Display the captured image with bounding box
             if (!showCameraPreview) {
                 mainViewModel.capturedImageUri.value?.let {
                     ImageWithBoundingBox(
-                        uri = it
+                        uri = it,
                     ) { height, width, _ ->
                         imageHeight = height
                         imageWidth = width
@@ -173,30 +207,34 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                     }
                 }
 
-                Button(
-                    onClick = {
+                if (!showCameraPreview) {
+                    speechRecognizerState.text?.let { text ->
+//                        Text(
+//                            text = text,
+//                            fontSize = 24.sp
+//                        )
+//
+//                        Log.d("ExploreScreen", "text: $text")
+                        Toast(context).apply {
+                            duration = Toast.LENGTH_SHORT
+                            setText(text)
+                            show()
+                        }
+
                         viewModel.getCoordinatesModel(
                             requestModel = RequestModel(
-                                text = textPrompt,
+                                text = text,
                                 uri = mainViewModel.capturedImageUri.value ?: Uri.EMPTY,
                                 height = imageHeight.toString(),
                                 width = imageWidth.toString()
                             )
                         )
-                    },
-                    modifier = Modifier
-                        .padding(all = 4.dp)
-                        .align(Alignment.CenterHorizontally),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF29B6F6),
-                        contentColor = Color(0xFFFAFAFA)
-                    )
-                ) {
-                    Text("Submit")
+                    }
                 }
 
                 if (uiState is UiState.CaptionResponse) {
                     DrawCaptionResponse(uiState.result)
+                    speechRecognizerViewModel.changeTextValue(null)
                 }
 
             }
@@ -237,11 +275,15 @@ private fun TitleText(text: String) {
 @Composable
 private fun ImageWithBoundingBox(
     uri: Uri,
-    onSizeChange: (Int, Int, Float) -> Unit
+    onSizeChange: (Int, Int, Float) -> Unit,
 ) {
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+
     Box {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AsyncImage(
@@ -249,7 +291,8 @@ private fun ImageWithBoundingBox(
                     .data(uri)
                     .build(),
                 modifier = Modifier
-                    .heightIn(max = 450.dp)
+                    .height(screenHeight * 0.8f)
+                    .width(screenWidth)
                     .onGloballyPositioned {
                         onSizeChange(it.size.height, it.size.width, it.positionInRoot().x)
                     },
