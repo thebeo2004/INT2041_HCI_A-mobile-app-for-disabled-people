@@ -3,6 +3,7 @@ package com.example.amobileappfordisabledpeople.ui.views
 import android.net.Uri
 import android.widget.Toast
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,10 +35,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,9 +50,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.amobileappfordisabledpeople.AppBar
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepoImpl
 import com.example.amobileappfordisabledpeople.Data.RequestModel
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
+import com.example.amobileappfordisabledpeople.ui.navigation.ExploreDestination
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -104,6 +109,20 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                     contentColor = Color.White
                 )
             }
+        },
+
+        modifier = Modifier.pointerInput(Unit) {
+            detectHorizontalDragGestures { change, dragAmount ->
+                if (dragAmount > 0) {
+                    navigateToDangerWarning()
+                } else {
+                    navigateToDetection()
+                }
+            }
+        },
+
+        topBar = {
+            AppBar(destinationName = stringResource(ExploreDestination.titleRes))
         }
     ) { it ->
         Column(
