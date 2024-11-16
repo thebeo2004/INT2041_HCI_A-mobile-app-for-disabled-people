@@ -1,13 +1,13 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
 import android.net.Uri
-import android.widget.Toast
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -56,8 +56,6 @@ import com.example.amobileappfordisabledpeople.Data.RequestModel
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.example.amobileappfordisabledpeople.ui.navigation.ExploreDestination
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -79,8 +77,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
         )
     )
     val uiState = viewModel.uiState
-    var showCameraPreview by rememberSaveable { mutableStateOf(false) }
-    val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+    var showCameraPreview by rememberSaveable { mutableStateOf(true) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val configuration = LocalConfiguration.current
@@ -133,50 +130,35 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            mainViewModel.capturedImageUri.value?.let {
-                ImageWithBoundingBox(
-                    uri = it
-                ) { height, width, _ ->
-                    imageHeight = height
-                    imageWidth = width
-                }
-            } ?: Text(
-                text = "No image captured",
-                fontSize = 16.sp,
-                color = Color.White
-            )
-
-            if (uiState is UiState.Loading) {
-                CircularProgressIndicator(color = Color(0xFF29B6F6))
-            } else {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.CenterHorizontally),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = {
-                            showCameraPreview = true
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(all = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF29B6F6),
-                            contentColor = Color(0xFFFFFFFF)
-                        )
-                    ) {
-                        Text("Open Camera")
+            // Display the captured image with bounding box
+            if (!showCameraPreview) {
+                mainViewModel.capturedImageUri.value?.let {
+                    ImageWithBoundingBox(
+                        uri = it
+                    ) { height, width, _ ->
+                        imageHeight = height
+                        imageWidth = width
                     }
                 }
+            }
+
+            if (uiState is UiState.Loading) {
+                // Display a progress indicator while loading
+                CircularProgressIndicator(color = Color(0xFF29B6F6))
+            } else {
 
                 if (showCameraPreview) {
                     Box(
-                        modifier = Modifier
-                            .height((screenHeight * 0.8).dp)
-                            .width((screenWidth).dp)
+                        modifier = Modifier.fillMaxSize()
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        mainViewModel.captureAndSave(context) {
+                                            showCameraPreview = false
+                                        }
+                                    }
+                                )
+                            }
                     ) {
                         AndroidView(
                             factory = {
@@ -188,31 +170,6 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                                 .height((screenHeight * 0.8).dp)
                                 .width((screenWidth).dp)
                         )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .height((screenHeight * 0.15).dp)
-                            .padding(all = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Button(
-                            onClick = {
-                                if (cameraPermissionState.status.isGranted) {
-                                    mainViewModel.captureAndSave(context) {
-                                        showCameraPreview = false
-                                    }
-                                } else {
-                                    Toast.makeText(context, "Camera permission not granted", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF29B6F6),
-                                contentColor = Color(0xFFFFFFFF)
-                            )
-                        ) {
-                            Text("Capture Image")
-                        }
                     }
                 }
 
