@@ -63,6 +63,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
+import android.speech.tts.TextToSpeech
+import java.util.Locale
+import androidx.compose.runtime.DisposableEffect
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -71,6 +74,23 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                   mainViewModel: MainViewModel = hiltViewModel(),
                   speechRecognizerViewModel: SpeechRecognizerViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    LaunchedEffect(Unit) {
+        textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.US
+            }
+        }
+    }
+
+    // Dispose of TextToSpeech when the composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            textToSpeech?.shutdown()
+        }
+    }
 
     val audioPermissionState = rememberPermissionState(android.Manifest.permission.RECORD_AUDIO)
 
@@ -89,8 +109,6 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
     )
 
     val speechRecognizerState by speechRecognizerViewModel.state.collectAsState()
-
-    val context = LocalContext.current
 
     var imageHeight by remember { mutableIntStateOf(0) }
     var imageWidth by remember { mutableIntStateOf(0) }
@@ -237,6 +255,14 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                     speechRecognizerViewModel.changeTextValue(null)
                 }
 
+            }
+
+            if (uiState is UiState.CaptionResponse) {
+                DrawCaptionResponse(uiState.result)
+                speechRecognizerViewModel.changeTextValue(null)
+
+                // Convert text to speech
+                textToSpeech?.speak(uiState.result, TextToSpeech.QUEUE_FLUSH, null, null)
             }
         }
     }
