@@ -1,6 +1,7 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
 import android.graphics.Paint
+import android.media.MediaPlayer
 import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.util.Size
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -36,6 +38,7 @@ import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRg
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.example.amobileappfordisabledpeople.ui.navigation.DetectionDestination
 import com.google.accompanist.permissions.*
+import kotlinx.coroutines.delay
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
 
@@ -51,6 +54,21 @@ fun DetectionScreen(
     navigateToDangerWarning: () -> Unit = {},
     navigateToExplore: () -> Unit = {}
 ) {
+
+    val context = LocalContext.current
+    val detectionSound = remember { MediaPlayer.create(context, R.raw.object_detection) }
+
+    LaunchedEffect(Unit) {
+        detectionSound.start()
+        delay(detectionSound.duration.toLong())
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            detectionSound.release()
+        }
+    }
+
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
     Scaffold(

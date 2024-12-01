@@ -2,6 +2,7 @@ package com.example.amobileappfordisabledpeople.ui.views
 
 import android.content.Context
 import android.graphics.Paint
+import android.media.MediaPlayer
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -20,6 +21,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -46,6 +49,8 @@ import com.example.amobileappfordisabledpeople.ui.navigation.DangerWarningDestin
 import com.google.accompanist.permissions.*
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
+import com.example.amobileappfordisabledpeople.R
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -59,6 +64,19 @@ fun DangerWarningScreen(
     navigateToDetection: () -> Unit = {}
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
+
+    val context = LocalContext.current
+    val dangerWarningSound = remember { MediaPlayer.create(context, R.raw.danger_warning) }
+
+    LaunchedEffect(Unit) {
+        dangerWarningSound.start()
+        delay(dangerWarningSound.duration.toLong())
+    }
+    DisposableEffect(Unit) {
+        onDispose {
+            dangerWarningSound.release()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.pointerInput(Unit) {

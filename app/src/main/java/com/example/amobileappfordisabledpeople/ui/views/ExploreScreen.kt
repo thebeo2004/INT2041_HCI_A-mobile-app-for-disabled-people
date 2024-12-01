@@ -1,5 +1,6 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
+import android.media.MediaPlayer
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -66,6 +67,8 @@ import kotlinx.coroutines.launch
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 import androidx.compose.runtime.DisposableEffect
+import com.example.amobileappfordisabledpeople.R
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -76,6 +79,20 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
 ) {
     val context = LocalContext.current
     var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    val exploreSound = remember { MediaPlayer.create(context, R.raw.explore_surrounding) }
+
+    LaunchedEffect(Unit) {
+        exploreSound.start()
+        delay(exploreSound.duration.toLong())
+    }
+
+
+    DisposableEffect(Unit) {
+        onDispose {
+            exploreSound.release()
+        }
+    }
 
     LaunchedEffect(Unit) {
         textToSpeech = TextToSpeech(context) { status ->
@@ -138,6 +155,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
             }
         }
     }
+
 
     Scaffold(
         containerColor = Color.Black,
