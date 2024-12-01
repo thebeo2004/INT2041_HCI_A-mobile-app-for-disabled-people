@@ -5,13 +5,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 
-sealed interface UiState {
-    data object Idle : UiState
-    data object Loading : UiState
-    data class ObjectDetectionResponse(val result: List<ObjectDetectionUiData>) : UiState
-    data class SegmentationResponse(val result: SegmentationUiData) : UiState
-    data class CaptionResponse(val result: String) : UiState
-    data class Error(val e: String) : UiState
+sealed class UiState {
+    object Idle : UiState()
+    object Loading : UiState()
+    data class ObjectDetectionResponse(val result: List<ObjectDetectionUiData>) : UiState()
+    data class SegmentationResponse(val result: SegmentationUiData) : UiState()
+    data class CaptionResponse(val result: String) : UiState()
+    data class Error(val e: String) : UiState()
 }
 
 data class ObjectDetectionUiData(
