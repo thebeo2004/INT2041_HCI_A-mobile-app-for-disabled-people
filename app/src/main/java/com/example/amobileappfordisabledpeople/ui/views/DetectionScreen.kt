@@ -66,6 +66,7 @@ fun DetectionScreen(
     DisposableEffect(Unit) {
         onDispose {
             detectionSound.release()
+            textToSpeech.stop()
         }
     }
 
