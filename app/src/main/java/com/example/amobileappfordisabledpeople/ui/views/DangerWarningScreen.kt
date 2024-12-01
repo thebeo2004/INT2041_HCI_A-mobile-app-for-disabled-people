@@ -42,6 +42,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
 import com.example.amobileappfordisabledpeople.AppBar
+import com.example.amobileappfordisabledpeople.DragThreshold
 import com.example.amobileappfordisabledpeople.features.object_detection.ObjectDetector
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
@@ -83,9 +84,9 @@ fun DangerWarningScreen(
     Scaffold(
         modifier = Modifier.pointerInput(Unit) {
             detectHorizontalDragGestures { change, dragAmount ->
-                if (dragAmount < 0) {
+                if (dragAmount < -DragThreshold) {
                     navigateToExplore()
-                } else {
+                } else if (dragAmount > DragThreshold) {
                     navigateToDetection()
                 }
             }

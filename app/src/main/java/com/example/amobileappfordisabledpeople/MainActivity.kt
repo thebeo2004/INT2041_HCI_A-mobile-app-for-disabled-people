@@ -26,6 +26,8 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+const val DragThreshold = 30f
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 

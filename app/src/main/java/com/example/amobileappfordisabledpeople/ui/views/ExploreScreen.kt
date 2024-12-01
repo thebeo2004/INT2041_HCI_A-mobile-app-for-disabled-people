@@ -62,6 +62,7 @@ import coil.request.ImageRequest
 import com.example.amobileappfordisabledpeople.AppBar
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepoImpl
 import com.example.amobileappfordisabledpeople.Data.RequestModel
+import com.example.amobileappfordisabledpeople.DragThreshold
 import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.SpeechRecognizerContract
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
@@ -194,9 +195,9 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
 
         modifier = Modifier.pointerInput(Unit) {
             detectHorizontalDragGestures { change, dragAmount ->
-                if (dragAmount > 0) {
+                if (dragAmount > DragThreshold) {
                     navigateToDangerWarning()
-                } else {
+                } else if (dragAmount < -DragThreshold) {
                     navigateToDetection()
                 }
             }

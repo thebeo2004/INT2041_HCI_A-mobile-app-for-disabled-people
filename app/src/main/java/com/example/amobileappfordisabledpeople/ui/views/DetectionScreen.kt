@@ -32,6 +32,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.LifecycleOwner
 import com.example.amobileappfordisabledpeople.AppBar
+import com.example.amobileappfordisabledpeople.DragThreshold
 import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.features.object_detection.ObjectDetector
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
@@ -76,9 +77,9 @@ fun DetectionScreen(
     Scaffold(
         modifier = Modifier.pointerInput(Unit) {
             detectHorizontalDragGestures { change, dragAmount ->
-                if (dragAmount < 0) {
+                if (dragAmount < -DragThreshold) {
                     navigateToDangerWarning()
-                } else {
+                } else if (dragAmount > DragThreshold) {
                     navigateToExplore()
                 }
             }
