@@ -81,6 +81,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
     var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
 
     val exploreSound = remember { MediaPlayer.create(context, R.raw.explore_surrounding) }
+    val cameraSound = remember { MediaPlayer.create(context, R.raw.camera_sound) }
 
     LaunchedEffect(Unit) {
         exploreSound.start()
@@ -90,7 +91,10 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
 
     DisposableEffect(Unit) {
         onDispose {
+            exploreSound.stop()
+            cameraSound.stop()
             exploreSound.release()
+            cameraSound.release()
         }
     }
 
@@ -226,6 +230,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                                         mainViewModel.captureAndSave(context) {
                                             showCameraPreview = false
                                         }
+                                        cameraSound.start()
                                     }
                                 )
                             }

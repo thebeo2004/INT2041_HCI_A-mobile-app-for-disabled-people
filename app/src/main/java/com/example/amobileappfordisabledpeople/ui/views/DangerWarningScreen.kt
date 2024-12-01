@@ -74,6 +74,7 @@ fun DangerWarningScreen(
     }
     DisposableEffect(Unit) {
         onDispose {
+            dangerWarningSound.stop()
             dangerWarningSound.release()
             textToSpeech.stop()
         }
