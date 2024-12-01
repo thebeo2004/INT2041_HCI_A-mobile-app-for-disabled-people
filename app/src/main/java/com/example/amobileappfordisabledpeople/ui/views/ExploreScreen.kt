@@ -82,6 +82,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
 
     val exploreSound = remember { MediaPlayer.create(context, R.raw.explore_surrounding) }
     val cameraSound = remember { MediaPlayer.create(context, R.raw.camera_sound) }
+    val speechSound = remember { MediaPlayer.create(context, R.raw.successfully_speak) }
 
     LaunchedEffect(Unit) {
         exploreSound.start()
@@ -125,7 +126,13 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
         contract = SpeechRecognizerContract(),
         onResult = {
             //Here we get the text
-            speechRecognizerViewModel.changeTextValue(it.toString())
+            if (it != null) {
+                speechSound.start()
+                speechRecognizerViewModel.changeTextValue(it.toString())
+            } else {
+                return@rememberLauncherForActivityResult
+            }
+
         }
     )
 
