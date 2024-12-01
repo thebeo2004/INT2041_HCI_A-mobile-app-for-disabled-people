@@ -272,10 +272,10 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                                 detectTapGestures(
                                     onPress = {
                                         boxColor = Color(143, 255, 179)
-                                        newPictureSound.start()
                                     },
                                     onLongPress = {
                                         boxColor = Color.Gray
+                                        newPictureSound.start()
                                         showCameraPreview = true
                                     }
                                 )
