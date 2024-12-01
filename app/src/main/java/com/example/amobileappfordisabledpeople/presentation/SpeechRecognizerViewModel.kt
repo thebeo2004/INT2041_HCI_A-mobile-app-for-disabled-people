@@ -22,4 +22,12 @@ class SpeechRecognizerViewModel: ViewModel() {
             }
         }
     }
+
+    fun reset() {
+        viewModelScope.launch {
+            _state.update { currentState ->
+                currentState.copy(text = null)
+            }
+        }
+    }
 }

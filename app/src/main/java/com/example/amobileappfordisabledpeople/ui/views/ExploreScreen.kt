@@ -67,6 +67,7 @@ import kotlinx.coroutines.launch
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.livedata.observeAsState
 import com.example.amobileappfordisabledpeople.R
 import kotlinx.coroutines.delay
 
@@ -86,7 +87,11 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
 
     LaunchedEffect(Unit) {
         exploreSound.start()
-        delay(exploreSound.duration.toLong())
+        textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.US
+            }
+        }
     }
 
 
@@ -96,20 +101,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
             cameraSound.stop()
             exploreSound.release()
             cameraSound.release()
-        }
-    }
 
-    LaunchedEffect(Unit) {
-        textToSpeech = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                textToSpeech?.language = Locale.US
-            }
-        }
-    }
-
-    // Dispose of TextToSpeech when the composable is disposed
-    DisposableEffect(Unit) {
-        onDispose {
             textToSpeech?.shutdown()
         }
     }
@@ -148,8 +140,9 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
             )
         )
     )
-    val uiState = viewModel.uiState
-    var showCameraPreview by rememberSaveable { mutableStateOf(true) }
+    val uiState = viewModel.uiState.observeAsState()
+
+    var showCameraPreview by remember { mutableStateOf(true) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     val configuration = LocalConfiguration.current
@@ -159,11 +152,30 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    LaunchedEffect(key1 = uiState) {
-        if (uiState is UiState.Error) {
-            scope.launch {
-                snackbarHostState.showSnackbar(uiState.e)
+
+//    LaunchedEffect(key1 = uiState.value) {
+//        if (uiState.value is UiState.Error) {
+//            scope.launch {
+//                snackbarHostState.showSnackbar((uiState.value as UiState.Error).e)
+//            }
+//        }
+//    }
+
+    LaunchedEffect(uiState.value) {
+        when (uiState.value) {
+            is UiState.CaptionResponse -> {
+                val result = (uiState.value as UiState.CaptionResponse).result
+                Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
+                speechRecognizerViewModel.changeTextValue(null)
+                textToSpeech?.speak(result, TextToSpeech.QUEUE_FLUSH, null, null)
+                viewModel.resetState()
             }
+            is UiState.Error -> {
+                val errorMessage = (uiState.value as UiState.Error).e
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+            else -> {}
         }
     }
 
@@ -202,7 +214,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onDoubleTap = {
-                            if (!showCameraPreview) {
+                            if (!showCameraPreview && uiState.value is UiState.Idle) {
                                 speechRecognizerLauncher.launch(Unit)
                             }
                         }
@@ -221,78 +233,58 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                         imageWidth = width
                     }
                 }
-            }
 
-            if (uiState is UiState.Loading) {
-                // Display a progress indicator while loading
-                CircularProgressIndicator(color = Color(0xFF29B6F6))
-            } else {
-
-                if (showCameraPreview) {
-                    Box(
-                        modifier = Modifier.fillMaxSize()
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onDoubleTap = {
-                                        mainViewModel.captureAndSave(context) {
-                                            showCameraPreview = false
-                                        }
-                                        cameraSound.start()
-                                    }
-                                )
-                            }
-                    ) {
-                        AndroidView(
-                            factory = {
-                                previewView = PreviewView(it)
-                                mainViewModel.showCameraPreview(previewView = previewView, lifecycleOwner = lifecycleOwner)
-                                previewView
-                            },
-                            modifier = Modifier
-                                .height((screenHeight * 0.8).dp)
-                                .width((screenWidth).dp)
-                        )
-                    }
-                }
-
-                if (!showCameraPreview) {
+                if (uiState.value is UiState.Loading) {
+                    CircularProgressIndicator(color = Color(0xFF29B6F6))
+                } else {
                     speechRecognizerState.text?.let { text ->
-//                        Text(
-//                            text = text,
-//                            fontSize = 24.sp
-//                        )
-//
-//                        Log.d("ExploreScreen", "text: $text")
-                        Toast(context).apply {
-                            duration = Toast.LENGTH_SHORT
-                            setText(text)
-                            show()
-                        }
 
-                        viewModel.getCoordinatesModel(
-                            requestModel = RequestModel(
-                                text = text,
-                                uri = mainViewModel.capturedImageUri.value ?: Uri.EMPTY,
-                                height = imageHeight.toString(),
-                                width = imageWidth.toString()
+                        if (text != null && text.isNotEmpty()) {
+
+                            Toast(context).apply {
+                                duration = Toast.LENGTH_SHORT
+                                setText(text)
+                                show()
+                            }
+
+                            viewModel.getCoordinatesModel(
+                                requestModel = RequestModel(
+                                    text = text,
+                                    uri = mainViewModel.capturedImageUri.value ?: Uri.EMPTY,
+                                    height = imageHeight.toString(),
+                                    width = imageWidth.toString()
+                                )
                             )
-                        )
+                        }
                     }
+
+                    speechRecognizerViewModel.reset()
                 }
-
-                if (uiState is UiState.CaptionResponse) {
-                    DrawCaptionResponse(uiState.result)
-                    speechRecognizerViewModel.changeTextValue(null)
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onDoubleTap = {
+                                    mainViewModel.captureAndSave(context) {
+                                        showCameraPreview = false
+                                    }
+                                    cameraSound.start()
+                                }
+                            )
+                        }
+                ) {
+                    AndroidView(
+                        factory = {
+                            previewView = PreviewView(it)
+                            mainViewModel.showCameraPreview(previewView = previewView, lifecycleOwner = lifecycleOwner)
+                            previewView
+                        },
+                        modifier = Modifier
+                            .height((screenHeight * 0.8).dp)
+                            .width((screenWidth).dp)
+                    )
                 }
-
-            }
-
-            if (uiState is UiState.CaptionResponse) {
-                DrawCaptionResponse(uiState.result)
-                speechRecognizerViewModel.changeTextValue(null)
-
-                // Convert text to speech
-                textToSpeech?.speak(uiState.result, TextToSpeech.QUEUE_FLUSH, null, null)
             }
         }
     }

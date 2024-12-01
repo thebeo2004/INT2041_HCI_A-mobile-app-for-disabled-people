@@ -1,5 +1,6 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -7,6 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -22,19 +25,30 @@ class CoordinatesModelViewModel(
     private val coordinatesModelRepo: CoordinatesModelRepo
 ) : ViewModel() {
 
-    var uiState by mutableStateOf<UiState>(UiState.Idle)
+    private val _uiState = MutableLiveData<UiState>()
+    val uiState: LiveData<UiState> get() = _uiState
 
     var imageLeftDistance by mutableFloatStateOf(0.0f)
 
+    init {
+        resetState()
+    }
+
+    fun resetState() {
+        _uiState.value = UiState.Idle
+    }
+
     fun getCoordinatesModel(requestModel: RequestModel) {
-        uiState = UiState.Loading
+        _uiState.value = UiState.Loading
+        Log.d("ExploreScreen", "Coordinate - Loading")
+
         viewModelScope.launch {
             try {
                 val coordinatesModel = coordinatesModelRepo
                     .getCoordinatesModel(requestModel)
                     .body()
 
-                uiState = when {
+                _uiState.value = when {
 
                     coordinatesModel?.response != null -> {
                         UiState.CaptionResponse(coordinatesModel.response)
@@ -50,9 +64,12 @@ class CoordinatesModelViewModel(
                         UiState.Error("No result found.")
                     }
                 }
+
+                Log.d("ExploreScreen", "Coordinate - ${_uiState.value.toString()}")
+
             } catch (e: Exception) {
                 e.printStackTrace()
-                uiState = if (e.message != null) {
+                _uiState.value = if (e.message != null) {
                     UiState.Error(e.message!!)
                 } else {
                     UiState.Error("An unknown error occurred.")
@@ -78,10 +95,6 @@ class CoordinatesModelViewModel(
                 textTopLeft = Offset(x1.toFloat() + imageLeftDistance, y1.toFloat() - 40)
             )
         }
-    }
-
-    fun resetData() {
-        uiState = UiState.Idle
     }
 }
 
