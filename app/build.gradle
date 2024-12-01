@@ -116,4 +116,6 @@ dependencies {
     // System
     implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
     implementation "com.google.accompanist:accompanist-permissions:0.24.3-alpha" // Giữ lại phiên bản mới nhất
+
+    implementation("androidx.compose.runtime:runtime-livedata:1.5.1")
 }
