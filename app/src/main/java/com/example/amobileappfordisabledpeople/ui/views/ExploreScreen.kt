@@ -2,10 +2,11 @@ package com.example.amobileappfordisabledpeople.ui.views
 
 import android.media.MediaPlayer
 import android.net.Uri
-import android.util.Log
+import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -15,34 +16,39 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,6 +62,7 @@ import coil.request.ImageRequest
 import com.example.amobileappfordisabledpeople.AppBar
 import com.example.amobileappfordisabledpeople.Data.CoordinatesModelRepoImpl
 import com.example.amobileappfordisabledpeople.Data.RequestModel
+import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.SpeechRecognizerContract
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.example.amobileappfordisabledpeople.presentation.SpeechRecognizerViewModel
@@ -63,13 +70,7 @@ import com.example.amobileappfordisabledpeople.ui.navigation.ExploreDestination
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import kotlinx.coroutines.launch
-import android.speech.tts.TextToSpeech
 import java.util.Locale
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.livedata.observeAsState
-import com.example.amobileappfordisabledpeople.R
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -84,6 +85,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
     val exploreSound = remember { MediaPlayer.create(context, R.raw.explore_surrounding) }
     val cameraSound = remember { MediaPlayer.create(context, R.raw.camera_sound) }
     val speechSound = remember { MediaPlayer.create(context, R.raw.successfully_speak) }
+    val newPictureSound = remember { MediaPlayer.create(context, R.raw.new_picture) }
 
     LaunchedEffect(Unit) {
         exploreSound.start()
@@ -99,8 +101,13 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
         onDispose {
             exploreSound.stop()
             cameraSound.stop()
+            speechSound.stop()
+            newPictureSound.stop()
+
             exploreSound.release()
             cameraSound.release()
+            speechSound.release()
+            newPictureSound.release()
 
             textToSpeech?.shutdown()
         }
@@ -151,15 +158,8 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
     var previewView: PreviewView
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-//    LaunchedEffect(key1 = uiState.value) {
-//        if (uiState.value is UiState.Error) {
-//            scope.launch {
-//                snackbarHostState.showSnackbar((uiState.value as UiState.Error).e)
-//            }
-//        }
-//    }
+    var boxColor by remember { mutableStateOf(Color.Gray) }
 
     LaunchedEffect(uiState.value) {
         when (uiState.value) {
@@ -209,7 +209,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
         Column(
             modifier = Modifier
                 .padding(it)
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .pointerInput(Unit) {
                     detectTapGestures(
@@ -259,6 +259,39 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                     }
 
                     speechRecognizerViewModel.reset()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(boxColor)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onPress = {
+                                        boxColor = Color(143, 255, 179)
+                                        newPictureSound.start()
+                                    },
+                                    onLongPress = {
+                                        boxColor = Color.Gray
+                                        showCameraPreview = true
+                                    }
+                                )
+                            },
+
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_camera_alt_24),
+                            contentDescription = "New picture",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .size(48.dp)
+                        )
+                    }
+
                 }
             } else {
                 Box(
