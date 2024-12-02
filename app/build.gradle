@@ -124,4 +124,6 @@ dependencies {
     //face detection
     implementation("com.google.android.gms:play-services-mlkit-face-detection:17.1.0")
     implementation("com.google.android.gms:play-services-vision:20.1.3")
+
+    implementation 'com.google.mlkit:object-detection:16.0.0'
 }
