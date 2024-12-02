@@ -106,6 +106,8 @@ dependencies {
 
     // TENSORFLOW lite
     implementation 'org.tensorflow:tensorflow-lite-support:0.4.0'
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.14.0")
 
     // CameraX
     implementation "androidx.camera:camera-core:${camerax_version}"
@@ -118,4 +120,8 @@ dependencies {
     implementation "com.google.accompanist:accompanist-permissions:0.24.3-alpha" // Giữ lại phiên bản mới nhất
 
     implementation("androidx.compose.runtime:runtime-livedata:1.5.1")
+
+    //face detection
+    implementation("com.google.android.gms:play-services-mlkit-face-detection:17.1.0")
+    implementation("com.google.android.gms:play-services-vision:20.1.3")
 }
