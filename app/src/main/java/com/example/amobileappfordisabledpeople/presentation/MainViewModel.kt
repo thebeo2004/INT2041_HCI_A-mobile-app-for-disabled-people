@@ -19,7 +19,7 @@ import androidx.camera.core.ImageCapture
 import com.example.amobileappfordisabledpeople.Data.repository.CustomCameraRepoImpl
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+open class MainViewModel @Inject constructor(
     private var repo: CustomCameraRepo,
     private val cameraProvider: ProcessCameraProvider,
     private val selector: CameraSelector,
