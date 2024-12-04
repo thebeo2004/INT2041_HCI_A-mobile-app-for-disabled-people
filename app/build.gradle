@@ -118,4 +118,8 @@ dependencies {
     implementation "com.google.accompanist:accompanist-permissions:0.24.3-alpha" // Giữ lại phiên bản mới nhất
 
     implementation("androidx.compose.runtime:runtime-livedata:1.5.1")
+
+    //Face detection introduced in ML Kit
+    implementation("com.google.android.gms:play-services-mlkit-face-detection:17.1.0")
+    implementation("com.google.android.gms:play-services-vision:20.1.3")
 }
