@@ -1,14 +1,18 @@
 package com.example.amobileappfordisabledpeople.ui.views
 
 import android.graphics.PointF
+import android.media.MediaPlayer
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,9 +26,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.amobileappfordisabledpeople.DragThreshold
+import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.SocializingModeBar
 import com.example.amobileappfordisabledpeople.features.FaceDetectionAnalyzer
-import com.example.amobileappfordisabledpeople.presentation.MoodTrackingViewModel
+import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.example.amobileappfordisabledpeople.utils.adjustPoint
 import com.example.amobileappfordisabledpeople.utils.adjustSize
 import com.example.amobileappfordisabledpeople.utils.drawBounds
@@ -35,7 +40,7 @@ import kotlin.math.abs
 @Composable
 fun MoodTrackingScreen(
     cameraExecutor: ExecutorService,
-    moodTrackingViewModel: MoodTrackingViewModel = hiltViewModel(),
+    moodTrackingViewModel: MainViewModel = hiltViewModel(),
     navigateToFaceRecognition: () -> Unit = {},
     navigateToExploreMode: () -> Unit = {}
 ) {
@@ -50,7 +55,45 @@ fun MoodTrackingScreen(
     val imageWidth = remember { mutableStateOf(0) }
     val imageHeight = remember { mutableStateOf(0) }
 
+    val moodTrackSound = remember { MediaPlayer.create(context, R.raw.mood_tracking) }
+    val happySound = remember { MediaPlayer.create(context, R.raw.happy_sound) }
+    val upsetSound = remember { MediaPlayer.create(context, R.raw.sad_sound) }
+
+    LaunchedEffect(Unit) {
+        moodTrackSound.start()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            moodTrackSound.stop()
+            happySound.stop()
+            upsetSound.stop()
+
+            moodTrackSound.release()
+            happySound.release()
+            upsetSound.release()
+        }
+    }
+
     val faces = remember { mutableStateListOf<Face>() }
+
+    val mood = remember { mutableStateOf<MoodState>(MoodState.Normal) }
+
+    LaunchedEffect(faces) {
+        mood.value = MoodState.Normal
+    }
+
+    LaunchedEffect(mood.value) {
+        when (mood.value) {
+            is MoodState.Happy -> {
+                happySound.start()
+            }
+            is MoodState.Sad -> {
+                upsetSound.start()
+            }
+            else -> {}
+        }
+    }
 
     val faceDetectionAnalyzer = FaceDetectionAnalyzer { detectedFace, width, height ->
         faces.clear()
@@ -103,14 +146,35 @@ fun MoodTrackingScreen(
                     previewView
                 },
                 modifier = Modifier.fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                when (mood.value) {
+                                    is MoodState.Happy -> {
+                                        happySound.start()
+                                    }
+                                    is MoodState.Sad -> {
+                                        upsetSound.start()
+                                    }
+                                    else -> {}
+                                }
+                            }
+                        )
+                    }
             )
-            DrawFaces(faces, imageHeight.value, imageWidth.value, screenWidth.value, screenHeight.value)
+            DrawFaces(faces, imageHeight.value, imageWidth.value, screenWidth.value, screenHeight.value, updateEmotionState = { smile, upset ->
+                if (smile > 0.9) {
+                    mood.value = MoodState.Happy
+                } else if (upset > 0.6) {
+                    mood.value = MoodState.Sad
+                }
+            })
         }
     }
 }
 
 @Composable
-fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth: Int, screenHeight: Int) {
+fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth: Int, screenHeight: Int, updateEmotionState: (Float, Float) -> Unit) {
     Canvas(modifier = Modifier.fillMaxSize()) {
         faces.forEach { face ->
             val boundingBox = face.boundingBox.toComposeRect()
@@ -124,11 +188,14 @@ fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth:
             // Calculate the level of certainty
             val certainty = "Certainty: ${calculateCertainty(face.headEulerAngleX, face.headEulerAngleY, face.headEulerAngleZ)}%"
 
-            val smileLevel = "Smile: ${face.smilingProbability}%"
+
+            val smileLevel = "Smile: ${(face.smilingProbability ?: 0f) * 100}%"
             val upsetLevel = "Upset: ${calculateUpsetLevel(face)}%"
 
+            updateEmotionState(face.smilingProbability ?: 0f, calculateUpsetLevel(face).toFloat())
+
             drawContext.canvas.nativeCanvas.drawText(
-                "$certainty\n$smileLevel",
+                "$certainty\n$smileLevel\n$upsetLevel",
                 topLeft.x,
                 topLeft.y - 10, // Position the text above the bounding box
                 android.graphics.Paint().apply {
@@ -174,5 +241,11 @@ fun calculateUpsetLevel(face: Face): Int {
     val upsetLevel = (smileScore * smileWeight + eyeOpenScore * eyeOpenWeight + headPoseScore * headPoseWeight) * 100
 
     return upsetLevel.toInt()
+}
+
+sealed class MoodState {
+    object Normal: MoodState()
+    object Happy: MoodState()
+    object Sad: MoodState()
 }
 
