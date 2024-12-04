@@ -12,7 +12,10 @@ import android.util.Size
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -52,6 +55,7 @@ import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
 import com.example.amobileappfordisabledpeople.R
 import kotlinx.coroutines.delay
+import kotlin.math.abs
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -62,7 +66,8 @@ fun DangerWarningScreen(
     labels: List<String>,
     textToSpeech: TextToSpeech,
     navigateToExplore: () -> Unit = {},
-    navigateToDetection: () -> Unit = {}
+    navigateToDetection: () -> Unit = {},
+    navigateToSocializingMode: () -> Unit = {},
 ) {
     val cameraPermissionState = rememberPermissionState(android.Manifest.permission.CAMERA)
 
@@ -83,13 +88,23 @@ fun DangerWarningScreen(
 
     Scaffold(
         modifier = Modifier.pointerInput(Unit) {
-            detectHorizontalDragGestures { change, dragAmount ->
-                if (dragAmount < -DragThreshold) {
-                    navigateToExplore()
-                } else if (dragAmount > DragThreshold) {
-                    navigateToDetection()
+            detectDragGestures(
+                onDrag = { change, dragAmount ->
+                    if (abs(dragAmount.x) > abs(dragAmount.y)) {
+                        if (abs(dragAmount.x) > DragThreshold) {
+                            if (dragAmount.x > 0) {
+                                navigateToDetection()
+                            } else {
+                                navigateToExplore()
+                            }
+                        }
+                    } else {
+                        if (abs(dragAmount.y) > DragThreshold) {
+                            navigateToSocializingMode()
+                        }
+                    }
                 }
-            }
+            )
         },
         topBar = {
             AppBar(destinationName = stringResource(DangerWarningDestination.titleRes))

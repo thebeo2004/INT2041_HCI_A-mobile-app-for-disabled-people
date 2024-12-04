@@ -11,6 +11,7 @@ import com.example.amobileappfordisabledpeople.ui.views.CameraPermission
 import com.example.amobileappfordisabledpeople.ui.views.DangerWarningScreen
 import com.example.amobileappfordisabledpeople.ui.views.DetectionScreen
 import com.example.amobileappfordisabledpeople.ui.views.ExploreScreen
+import com.example.amobileappfordisabledpeople.ui.views.MoodTrackingScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -48,7 +49,8 @@ fun ApplicationNavHost(
                 labels = labels,
                 textToSpeech = textToSpeech,
                 navigateToDangerWarning = {navController.navigate(DangerWarningDestination.route)},
-                navigateToExplore = {navController.navigate(ExploreDestination.route)}
+                navigateToExplore = {navController.navigate(ExploreDestination.route)},
+                navigateToSocializingMode = {navController.navigate(MoodTrackingDestination.route)}
             )
         }
         composable(route = DangerWarningDestination.route) {
@@ -58,15 +60,23 @@ fun ApplicationNavHost(
                 labels = labels,
                 textToSpeech = textToSpeech,
                 navigateToExplore = {navController.navigate(ExploreDestination.route)},
-                navigateToDetection = {navController.navigate(DetectionDestination.route)}
+                navigateToDetection = {navController.navigate(DetectionDestination.route)},
+                navigateToSocializingMode = {navController.navigate(MoodTrackingDestination.route)}
             )
         }
         composable(route = ExploreDestination.route) {
             ExploreScreen(
                 navigateToDangerWarning = {navController.navigate(DangerWarningDestination.route)},
-                navigateToDetection = {navController.navigate(DetectionDestination.route)}
+                navigateToDetection = {navController.navigate(DetectionDestination.route)},
+                navigateToSocializingMode = {navController.navigate(MoodTrackingDestination.route)}
             )
 
+        }
+        composable(route = MoodTrackingDestination.route) {
+            MoodTrackingScreen(cameraExecutor = cameraExecutor,
+//                navigateToFaceRecognition = {navController.navigate(FaceRecognition.route)},
+                navigateToExploreMode = {navController.navigate(DetectionDestination.route)}
+            )
         }
     }
 }

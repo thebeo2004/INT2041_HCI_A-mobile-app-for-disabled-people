@@ -7,8 +7,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,11 +74,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.util.Locale
+import kotlin.math.abs
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                   navigateToDetection: () -> Unit = {},
+                  navigateToSocializingMode: () -> Unit = {},
                   mainViewModel: MainViewModel = hiltViewModel(),
                   speechRecognizerViewModel: SpeechRecognizerViewModel = viewModel()
 ) {
@@ -194,13 +198,23 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
         },
 
         modifier = Modifier.pointerInput(Unit) {
-            detectHorizontalDragGestures { change, dragAmount ->
-                if (dragAmount > DragThreshold) {
-                    navigateToDangerWarning()
-                } else if (dragAmount < -DragThreshold) {
-                    navigateToDetection()
+            detectDragGestures(
+                onDrag = { change, dragAmount ->
+                    if (abs(dragAmount.x) > abs(dragAmount.y)) {
+                        if (abs(dragAmount.x) > DragThreshold) {
+                            if (dragAmount.x > 0) {
+                                navigateToDangerWarning()
+                            } else {
+                                navigateToDetection()
+                            }
+                        }
+                    } else {
+                        if (abs(dragAmount.y) > DragThreshold) {
+                            navigateToSocializingMode()
+                        }
+                    }
                 }
-            }
+            )
         },
 
         topBar = {
@@ -272,12 +286,9 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                                 detectTapGestures(
                                     onPress = {
                                         boxColor = Color(143, 255, 179)
-                                    },
-                                    onLongPress = {
-                                        boxColor = Color.Gray
                                         newPictureSound.start()
                                         showCameraPreview = true
-                                    }
+                                    },
                                 )
                             },
 

@@ -8,7 +8,10 @@ import android.util.Size
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
@@ -42,6 +45,7 @@ import com.google.accompanist.permissions.*
 import kotlinx.coroutines.delay
 import org.tensorflow.lite.Interpreter
 import java.util.concurrent.ExecutorService
+import kotlin.math.abs
 
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -53,7 +57,8 @@ fun DetectionScreen(
     labels: List<String>,
     textToSpeech: TextToSpeech,
     navigateToDangerWarning: () -> Unit = {},
-    navigateToExplore: () -> Unit = {}
+    navigateToExplore: () -> Unit = {},
+    navigateToSocializingMode: () -> Unit = {},
 ) {
 
     val context = LocalContext.current
@@ -76,13 +81,23 @@ fun DetectionScreen(
 
     Scaffold(
         modifier = Modifier.pointerInput(Unit) {
-            detectHorizontalDragGestures { change, dragAmount ->
-                if (dragAmount < -DragThreshold) {
-                    navigateToDangerWarning()
-                } else if (dragAmount > DragThreshold) {
-                    navigateToExplore()
+            detectDragGestures(
+                onDrag = { change, dragAmount ->
+                    if (abs(dragAmount.x) > abs(dragAmount.y)) {
+                        if (abs(dragAmount.x) > DragThreshold) {
+                            if (dragAmount.x > 0) {
+                                navigateToExplore()
+                            } else {
+                                navigateToDangerWarning()
+                            }
+                        }
+                    } else {
+                        if (abs(dragAmount.y) > DragThreshold) {
+                            navigateToSocializingMode()
+                        }
+                    }
                 }
-            }
+            )
         },
         topBar = {
             AppBar(destinationName = stringResource(DetectionDestination.titleRes))
