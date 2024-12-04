@@ -1,6 +1,7 @@
 package com.example.amobileappfordisabledpeople.features.face_recognition
 
 import android.content.Context
+import android.util.Log
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.image.TensorImage
 import java.io.FileInputStream
@@ -11,8 +12,10 @@ class FaceNetModel(context: Context) {
     private val model: Interpreter
 
     init {
-        val modelFile = loadModelFile(context, "mobile_facenet.tflite")
+        Log.d("FaceNetModel", "Loading model")
+        val modelFile = loadModelFile(context, "mobile_face_net.tflite")
         model = Interpreter(modelFile)
+        Log.d("FaceNetModel", "Model loaded")
     }
 
     private fun loadModelFile(context: Context, modelName: String): MappedByteBuffer {
@@ -25,7 +28,7 @@ class FaceNetModel(context: Context) {
     }
 
     fun getEmbedding(image: TensorImage): FloatArray {
-        val embedding = Array(1) { FloatArray(128) }
+        val embedding = Array(1) { FloatArray(192) }
         model.run(image.buffer, embedding)
         return embedding[0]
     }

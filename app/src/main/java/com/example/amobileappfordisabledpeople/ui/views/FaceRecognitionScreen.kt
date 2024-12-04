@@ -50,7 +50,7 @@ fun FaceRecognitionScreen() {
         CameraView(
             context = context,
             lifecycleOwner = lifecycleOwner,
-            analyzer = FaceDetectionAnalyzer { detectedFaces, width, height ->
+            analyzer = FaceDetectionAnalyzer(context) { detectedFaces, width, height ->
                 faces.clear()
                 faces.addAll(detectedFaces)
                 imageWidth.value = width
