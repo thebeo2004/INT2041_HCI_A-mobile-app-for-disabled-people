@@ -78,6 +78,50 @@ fun AppBar(
 }
 
 @Composable
+fun SocializingModeBar(
+    destinationName: String,
+    modifier: Modifier = Modifier,
+) {
+    var selectedTabIndex = 0
+    if (destinationName == stringResource(R.string.mood_tracking)) {
+        selectedTabIndex = 0
+    } else if (destinationName == stringResource(R.string.face_recognition)) {
+        selectedTabIndex = 1
+    }
+
+    val tabs = listOf("MOOD TRACKING", "FACE RECOGNITION")
+
+    TabRow(
+        selectedTabIndex = selectedTabIndex,
+        backgroundColor = Color.White,
+        contentColor = Color.Black,
+        indicator = { tabPositions ->
+            TabRowDefaults.Indicator(
+                modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                color = Color.Black,
+                height = 4.dp
+            )
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        tabs.forEachIndexed { index, title ->
+            Tab(
+                selected = selectedTabIndex == index,
+                onClick = { /**/ },
+                text = {
+                    Text(
+                        text = title,
+                        color = if (selectedTabIndex == index) Color.Black else Color.Gray,
+                        style = MaterialTheme.typography.subtitle2
+                    )
+                }
+            )
+        }
+    }
+}
+
+
+@Composable
 fun App(navHostController: NavHostController = rememberNavController(), cameraExecutor: ExecutorService, yuvToRgbConverter: YuvToRgbConverter, interpreter: Interpreter, labels: List<String>, textToSpeech: TextToSpeech) {
     ApplicationNavHost(navController = navHostController, cameraExecutor = cameraExecutor, yuvToRgbConverter = yuvToRgbConverter, interpreter = interpreter, labels = labels, textToSpeech = textToSpeech)
 }
