@@ -164,7 +164,7 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var boxColor by remember { mutableStateOf(Color.Gray) }
+    var boxColor = Color(143, 255, 179)
 
     LaunchedEffect(uiState.value) {
         when (uiState.value) {
@@ -228,11 +228,11 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                 .verticalScroll(rememberScrollState())
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onDoubleTap = {
-                            if (!showCameraPreview && uiState.value is UiState.Idle) {
-                                speechRecognizerLauncher.launch(Unit)
-                            }
-                        }
+//                        onDoubleTap = {
+//                            if (!showCameraPreview && uiState.value is UiState.Idle) {
+//                                speechRecognizerLauncher.launch(Unit)
+//                            }
+//                        }
                     )
                 },
 
@@ -285,7 +285,6 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                             .pointerInput(Unit) {
                                 detectTapGestures(
                                     onPress = {
-                                        boxColor = Color(143, 255, 179)
                                         newPictureSound.start()
                                         showCameraPreview = true
                                     },
