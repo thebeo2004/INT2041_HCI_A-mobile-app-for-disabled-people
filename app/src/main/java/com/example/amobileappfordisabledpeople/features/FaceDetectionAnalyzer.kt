@@ -4,6 +4,7 @@ import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
@@ -15,7 +16,7 @@ class FaceDetectionAnalyzer(
 
     private val options = FaceDetectorOptions.Builder()
         .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
+        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
         .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
         .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
         .enableTracking()
@@ -25,12 +26,20 @@ class FaceDetectionAnalyzer(
 
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(image: ImageProxy) {
-
         image.image?.let {
             val imageValue = InputImage.fromMediaImage(it, image.imageInfo.rotationDegrees)
             faceDetector.process(imageValue)
-                .addOnCompleteListener { faces ->
-                    onFaceDetected(faces.result, image.width, image.height)
+                .addOnCompleteListener { task: Task<List<Face>> ->
+                    if (task.isSuccessful) {
+                        val faces = task.result
+                        val imageWidth = image.width
+                        val imageHeight = image.height
+
+                        // Find the most prominent face (largest bounding box)
+                        val mostProminentFace = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
+
+                        onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight)
+                    }
                     image.image?.close()
                     image.close()
                 }
