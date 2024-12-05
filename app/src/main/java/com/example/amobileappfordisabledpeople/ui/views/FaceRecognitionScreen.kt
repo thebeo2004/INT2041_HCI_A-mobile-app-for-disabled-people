@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.amobileappfordisabledpeople.ApplicationViewModel
 import com.example.amobileappfordisabledpeople.DragThreshold
 import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.SocializingModeBar
@@ -50,7 +51,6 @@ import kotlin.math.abs
 fun FaceRecognitionScreen(
     cameraExecutor: ExecutorService,
     viewModel: MainViewModel = hiltViewModel(),
-    faceNetModel: FaceNetModel,
     navigateToMoodTracking: () -> Unit = {},
     navigateToExploreMode: () -> Unit = {}
 
@@ -81,6 +81,9 @@ fun FaceRecognitionScreen(
             }
         }
     }
+
+    val applicationViewModel: ApplicationViewModel = hiltViewModel()
+    val faceNetModel: FaceNetModel = applicationViewModel.faceNetModel
 
     DisposableEffect(Unit) {
         onDispose {

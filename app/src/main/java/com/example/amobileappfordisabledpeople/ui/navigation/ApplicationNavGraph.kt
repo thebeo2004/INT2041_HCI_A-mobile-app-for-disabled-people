@@ -27,7 +27,6 @@ fun ApplicationNavHost(
     cameraExecutor: ExecutorService,
     yuvToRgbConverter: YuvToRgbConverter,
     interpreter: Interpreter,
-    faceNetModel: FaceNetModel,
     labels: List<String>,
     textToSpeech: TextToSpeech,
     modifier: Modifier = Modifier
@@ -84,7 +83,6 @@ fun ApplicationNavHost(
         composable(route = FaceRecognition.route) {
             FaceRecognitionScreen(
                 cameraExecutor = cameraExecutor,
-                faceNetModel = faceNetModel,
                 navigateToMoodTracking = {navController.navigate(MoodTrackingDestination.route)},
                 navigateToExploreMode = {navController.navigate(DetectionDestination.route)}
             )

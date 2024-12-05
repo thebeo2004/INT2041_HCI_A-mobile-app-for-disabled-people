@@ -9,11 +9,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.amobileappfordisabledpeople.features.face_recognition.FaceNetModel
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
+import com.example.amobileappfordisabledpeople.ui.views.FaceRecognitionScreen
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import org.tensorflow.lite.Interpreter
@@ -55,12 +58,17 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
+                    val applicationViewModel: ApplicationViewModel = hiltViewModel()
+
+                    LaunchedEffect(Unit) {
+                        applicationViewModel.faceNetModel
+                    }
                     App(cameraExecutor = cameraExecutor,
                         yuvToRgbConverter = yuvToRgbConverter,
                         interpreter = interpreter,
                         labels = labels,
-                        textToSpeech = textToSpeech,
-                        faceNetModel = faceNetModel)
+                        textToSpeech = textToSpeech
+                    )
                 }
             }
         }
