@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.amobileappfordisabledpeople.features.face_recognition.FaceNetModel
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.example.amobileappfordisabledpeople.ui.theme.ObjectDetectionTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
@@ -58,7 +59,8 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         yuvToRgbConverter = yuvToRgbConverter,
                         interpreter = interpreter,
                         labels = labels,
-                        textToSpeech = textToSpeech)
+                        textToSpeech = textToSpeech,
+                        faceNetModel = faceNetModel)
                 }
             }
         }
@@ -106,6 +108,10 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
 
 
     private lateinit var cameraExecutor: ExecutorService
+
+    private val faceNetModel: FaceNetModel by lazy {
+        FaceNetModel(this)
+    }
 
     //Call load model function
     private val interpreter: Interpreter by lazy {

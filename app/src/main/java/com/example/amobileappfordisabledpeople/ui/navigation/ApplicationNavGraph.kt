@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.amobileappfordisabledpeople.features.face_recognition.FaceNetModel
 import com.example.amobileappfordisabledpeople.features.object_detection.YuvToRgbConverter
 import com.example.amobileappfordisabledpeople.ui.views.CameraPermission
 import com.example.amobileappfordisabledpeople.ui.views.DangerWarningScreen
@@ -25,6 +26,7 @@ fun ApplicationNavHost(
     cameraExecutor: ExecutorService,
     yuvToRgbConverter: YuvToRgbConverter,
     interpreter: Interpreter,
+    faceNetModel: FaceNetModel,
     labels: List<String>,
     textToSpeech: TextToSpeech,
     modifier: Modifier = Modifier
