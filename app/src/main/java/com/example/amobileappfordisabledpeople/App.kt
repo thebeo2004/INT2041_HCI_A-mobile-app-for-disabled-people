@@ -89,7 +89,7 @@ fun SocializingModeBar(
         selectedTabIndex = 1
     }
 
-    val tabs = listOf("MOOD TRACKING", "FACE RECOGNITION")
+    val tabs = listOf("MOOD TRACKING")
 
     TabRow(
         selectedTabIndex = selectedTabIndex,
