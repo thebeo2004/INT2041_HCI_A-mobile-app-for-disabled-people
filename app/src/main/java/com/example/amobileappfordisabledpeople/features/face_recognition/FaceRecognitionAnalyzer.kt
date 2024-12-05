@@ -33,6 +33,12 @@ class FaceRecognitionAnalyzer(
 
     private val faceDetector = FaceDetection.getClient(options)
 
+    private var storedImageEmbeddings: List<FloatArray> = mutableListOf()
+
+    init {
+        storedImageEmbeddings = embeddingStoredImages()
+    }
+
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(image: ImageProxy) {
         image.image?.let {
@@ -74,10 +80,9 @@ class FaceRecognitionAnalyzer(
                                     "David Beckham",
                                     "Donald Trump",
                                     "MTP",
-                                    "Rihanna"
+                                    "Rihanna",
+                                    "Thu Vu"
                                 )
-
-                                val storedImageEmbeddings = embeddingStoredImages()
 
                                 storedImageEmbeddings.forEachIndexed { index, embedding ->
                                     val distance = calculateEuclideanDistance(faceEmbedding, embedding)
@@ -113,25 +118,31 @@ class FaceRecognitionAnalyzer(
             R.drawable.david_beckham,
             R.drawable.donal_trump,
             R.drawable.mtp,
-            R.drawable.rihanna
+            R.drawable.rihanna,
+            R.drawable.thu_vu
         )
 
         val embeddings = mutableListOf<FloatArray>()
 
-        val storedBitmaps = famousImages.map { drawableResId ->
-            loadDrawableAsBitmap(context, drawableResId)
-        }
+        famousImages.forEach { drawableResId ->
+            val bitmap = loadDrawableAsBitmap(context, drawableResId)
+            val inputImage = InputImage.fromBitmap(bitmap, 0)
 
-        val storedImages = storedBitmaps.map { bitmap ->
-            TensorImage.fromBitmap(bitmap)
-        }
-
-        val preprocessedImages = storedImages.map { tensorImage ->
-            preprocessImage(tensorImage)
-        }
-
-        preprocessedImages.map { preprocessedImage ->
-            embeddings.add(faceNetModel.getEmbedding(preprocessedImage))
+            faceDetector.process(inputImage)
+                .addOnSuccessListener { faces ->
+                    faces.forEach { face ->
+                        val faceBitmap = cropFace(bitmap, face.boundingBox, 0f)
+                        if (faceBitmap != null) {
+                            val tensorImage = TensorImage.fromBitmap(faceBitmap)
+                            val preprocessedImage = preprocessImage(tensorImage)
+                            val embedding = faceNetModel.getEmbedding(preprocessedImage)
+                            embeddings.add(embedding)
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    e.printStackTrace()
+                }
         }
 
         return embeddings
