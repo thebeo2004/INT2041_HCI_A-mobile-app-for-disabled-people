@@ -228,11 +228,11 @@ fun ExploreScreen(navigateToDangerWarning: () -> Unit = {},
                 .verticalScroll(rememberScrollState())
                 .pointerInput(Unit) {
                     detectTapGestures(
-//                        onDoubleTap = {
-//                            if (!showCameraPreview && uiState.value is UiState.Idle) {
-//                                speechRecognizerLauncher.launch(Unit)
-//                            }
-//                        }
+                        onDoubleTap = {
+                            if (!showCameraPreview && uiState.value is UiState.Idle) {
+                                speechRecognizerLauncher.launch(Unit)
+                            }
+                        }
                     )
                 },
 
