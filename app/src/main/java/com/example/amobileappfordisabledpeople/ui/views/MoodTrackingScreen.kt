@@ -149,8 +149,8 @@ fun MoodTrackingScreen(
             DrawFaces(faces, imageHeight.value, imageWidth.value, screenWidth.value, screenHeight.value, updateEmotionState = { smile, upset ->
                 if (smile > 0.9) {
                     mood.value = MoodState.Happy
-                } else if (upset > 0.6) {
-                    mood.value = MoodState.Sad
+                } else {
+                    mood.value = MoodState.Normal
                 }
             })
         }
