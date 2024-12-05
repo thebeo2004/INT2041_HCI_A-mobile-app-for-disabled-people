@@ -3,6 +3,7 @@ package com.example.amobileappfordisabledpeople.ui.views
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.PointF
+import android.media.MediaPlayer
 import android.speech.tts.TextToSpeech
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
@@ -30,6 +31,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.amobileappfordisabledpeople.DragThreshold
+import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.SocializingModeBar
 import com.example.amobileappfordisabledpeople.features.face_recognition.FaceNetModel
 import com.example.amobileappfordisabledpeople.features.face_recognition.FaceRecognitionAnalyzer
@@ -69,8 +71,10 @@ fun FaceRecognitionScreen(
     val distance = remember { mutableStateOf(0f) }
 
     var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
+    val recognitionSound = remember { MediaPlayer.create(context, R.raw.face_recognition) }
 
     LaunchedEffect(Unit) {
+        recognitionSound.start()
         textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech?.language = Locale.US
@@ -85,7 +89,11 @@ fun FaceRecognitionScreen(
     }
 
     DisposableEffect(Unit) {
-        textToSpeech?.shutdown()
+        onDispose {
+            recognitionSound.stop()
+            recognitionSound.release()
+            textToSpeech?.shutdown()
+        }
     }
 
     val faceRecognitionAnalyzer = FaceRecognitionAnalyzer(context, faceNetModel) { detectedFace, width, height, name, actualDistance  ->
