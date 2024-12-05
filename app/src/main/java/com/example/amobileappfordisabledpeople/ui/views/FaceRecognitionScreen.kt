@@ -82,12 +82,6 @@ fun FaceRecognitionScreen(
         }
     }
 
-    LaunchedEffect(recognizedPerson.value) {
-        if (recognizedPerson.value != "None") {
-            textToSpeech?.speak(recognizedPerson.value, TextToSpeech.QUEUE_FLUSH, null, null)
-        }
-    }
-
     DisposableEffect(Unit) {
         onDispose {
             recognitionSound.stop()

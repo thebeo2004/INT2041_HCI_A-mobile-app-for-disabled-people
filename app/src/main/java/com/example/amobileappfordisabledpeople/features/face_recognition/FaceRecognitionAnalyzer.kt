@@ -103,11 +103,6 @@ class FaceRecognitionAnalyzer(
                             }
                         }
 
-//                        if (person != "None") {
-//                            onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight, person, actualDistance)
-//                        } else {
-//                            onFaceDetected(mutableListOf(), imageWidth, imageHeight, person, 999999f)
-//                        }
                         onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight, person, actualDistance)
                     }
 

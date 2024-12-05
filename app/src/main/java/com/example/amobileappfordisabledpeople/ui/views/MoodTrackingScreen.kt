@@ -83,18 +83,6 @@ fun MoodTrackingScreen(
         mood.value = MoodState.Normal
     }
 
-    LaunchedEffect(mood.value) {
-        when (mood.value) {
-            is MoodState.Happy -> {
-                happySound.start()
-            }
-            is MoodState.Sad -> {
-                upsetSound.start()
-            }
-            else -> {}
-        }
-    }
-
     val faceDetectionAnalyzer = FaceDetectionAnalyzer { detectedFace, width, height ->
         faces.clear()
         faces.addAll(detectedFace)
