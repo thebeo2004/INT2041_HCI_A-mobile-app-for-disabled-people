@@ -118,11 +118,7 @@ fun MoodTrackingScreen(
                 onDrag = { change, dragAmount ->
                     if (abs(dragAmount.x) > abs(dragAmount.y)) {
                         if (abs(dragAmount.x) > DragThreshold) {
-                            if (dragAmount.x > 0) {
-                                navigateToFaceRecognition()
-                            } else {
-                                navigateToFaceRecognition
-                            }
+                            navigateToFaceRecognition()
                         }
                     } else {
                         if (abs(dragAmount.y) > DragThreshold) {
