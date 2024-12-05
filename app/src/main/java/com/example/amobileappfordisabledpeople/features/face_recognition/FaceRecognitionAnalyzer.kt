@@ -23,10 +23,6 @@ class FaceRecognitionAnalyzer(
     private val onFaceDetected: (faces: MutableList<Face>, width: Int, height: Int, recognizedPerson: String, distance: Float) -> Unit,
 ) : ImageAnalysis.Analyzer {
 
-    init {
-        EmbeddingStore.initialize(context, faceNetModel)
-    }
-
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(image: ImageProxy) {
         image.image?.let {
