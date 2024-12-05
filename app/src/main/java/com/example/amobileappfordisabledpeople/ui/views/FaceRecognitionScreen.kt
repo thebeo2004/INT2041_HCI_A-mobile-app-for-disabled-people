@@ -6,11 +6,13 @@ import android.graphics.PointF
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.amobileappfordisabledpeople.DragThreshold
 import com.example.amobileappfordisabledpeople.SocializingModeBar
 import com.example.amobileappfordisabledpeople.features.face_recognition.FaceNetModel
 import com.example.amobileappfordisabledpeople.features.face_recognition.FaceRecognitionAnalyzer
@@ -35,6 +38,7 @@ import com.example.amobileappfordisabledpeople.utils.drawBounds
 import com.google.mlkit.vision.face.Face
 import java.util.concurrent.ExecutorService
 import kotlin.collections.forEach
+import kotlin.math.abs
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -58,11 +62,23 @@ fun FaceRecognitionScreen(
 
     val faces = remember { mutableStateListOf<Face>() }
 
-    val faceRecognitionAnalyzer = FaceRecognitionAnalyzer(context, faceNetModel) { detectedFace, width, height ->
+    val recognizedPerson = remember { mutableStateOf("None") }
+    val distance = remember { mutableStateOf(0f) }
+
+    LaunchedEffect(recognizedPerson.value) {
+        if (recognizedPerson.value != "None") {
+        }
+        else {
+        }
+    }
+
+    val faceRecognitionAnalyzer = FaceRecognitionAnalyzer(context, faceNetModel) { detectedFace, width, height, name, actualDistance  ->
         faces.clear()
         faces.addAll(detectedFace)
         imageWidth.value = width
         imageHeight.value = height
+        recognizedPerson.value = name
+        distance.value = actualDistance
     }
 
     val imageAnalysis = ImageAnalysis.Builder()
@@ -76,6 +92,21 @@ fun FaceRecognitionScreen(
     viewModel.initRepo(imageAnalysis)
 
     Scaffold(
+        modifier = Modifier.pointerInput(Unit) {
+            detectDragGestures(
+                onDrag = { change, dragAmount ->
+                    if (abs(dragAmount.x) > abs(dragAmount.y)) {
+                        if (abs(dragAmount.x) > DragThreshold) {
+                            navigateToMoodTracking()
+                        }
+                    } else {
+                        if (abs(dragAmount.y) > DragThreshold) {
+                            navigateToExploreMode()
+                        }
+                    }
+                }
+            )
+        },
         topBar = {
             SocializingModeBar(destinationName = "Face Recognition")
         }
@@ -97,13 +128,13 @@ fun FaceRecognitionScreen(
                         )
                     }
             )
-            DrawFaces(faces, imageHeight.value, imageWidth.value, screenWidth.value, screenHeight.value)
+            DrawFaces(faces, imageHeight.value, imageWidth.value, screenWidth.value, screenHeight.value, recognizedPerson.value, distance.value)
         }
     }
 }
 
 @Composable
-fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth: Int, screenHeight: Int) {
+fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth: Int, screenHeight: Int, name: String, distance: Float) {
     Canvas(modifier = Modifier.fillMaxSize()) {
         faces.forEach { face ->
             val boundingBox = face.boundingBox.toComposeRect()
@@ -114,11 +145,9 @@ fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth:
             )
             drawBounds(topLeft, size, Color.Yellow, 5f)
 
-            // Calculate the level of certainty
-            val certainty = "Certainty: ${calculateCertainty(face.headEulerAngleX, face.headEulerAngleY, face.headEulerAngleZ)}%"
-
+            val recognition = "$name\n$distance"
             drawContext.canvas.nativeCanvas.drawText(
-                certainty,
+                recognition,
                 topLeft.x,
                 topLeft.y - 10, // Position the text above the bounding box
                 android.graphics.Paint().apply {

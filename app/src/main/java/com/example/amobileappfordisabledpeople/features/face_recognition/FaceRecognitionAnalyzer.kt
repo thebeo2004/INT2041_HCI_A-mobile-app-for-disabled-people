@@ -10,6 +10,8 @@ import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
@@ -18,11 +20,12 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import org.tensorflow.lite.support.image.TensorImage
 import kotlin.collections.List
 import com.example.amobileappfordisabledpeople.R
+import kotlin.math.min
 
 class FaceRecognitionAnalyzer(
     private val context: Context,
     private val faceNetModel: FaceNetModel,
-    private val onFaceDetected: (faces: MutableList<Face>, width: Int, height: Int) -> Unit,
+    private val onFaceDetected: (faces: MutableList<Face>, width: Int, height: Int, recognizedPerson: String, distance: Float) -> Unit,
 ) : ImageAnalysis.Analyzer {
 
     private val options = FaceDetectorOptions.Builder()
@@ -62,6 +65,7 @@ class FaceRecognitionAnalyzer(
                         Log.d("FaceRecognition", "Most prominent face: $mostProminentFace")
 
                         var person = "None"
+                        var actualDistance = 99999999f
 
                         if (mostProminentFace != null) {
                             val faceBitmap = cropFace(bitmap, mostProminentFace.boundingBox, image.imageInfo.rotationDegrees.toFloat())
@@ -87,14 +91,17 @@ class FaceRecognitionAnalyzer(
                                 storedImageEmbeddings.forEachIndexed { index, embedding ->
                                     val distance = calculateEuclideanDistance(faceEmbedding, embedding)
                                     Log.d("Famous", "Distance from $person to ${famous[index]}: $distance")
-                                    if (distance < 1.1f) {
+
+                                    actualDistance = min(actualDistance, distance)
+
+                                    if (actualDistance < 1.2f) {
                                         person = famous[index]
                                     }
                                 }
 
                             }
                         }
-                        onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight)
+                        onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight, person, actualDistance)
                     }
 
                     image.image?.close()
