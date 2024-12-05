@@ -92,10 +92,11 @@ class FaceRecognitionAnalyzer(
                                     val distance = calculateEuclideanDistance(faceEmbedding, embedding)
                                     Log.d("Famous", "Distance from $person to ${famous[index]}: $distance")
 
-                                    actualDistance = min(actualDistance, distance)
-
-                                    if (actualDistance < 1f) {
-                                        person = famous[index]
+                                    if (distance < actualDistance) {
+                                        actualDistance = distance
+                                        if (actualDistance < 1f) {
+                                            person = famous[index]
+                                        }
                                     }
                                 }
 
