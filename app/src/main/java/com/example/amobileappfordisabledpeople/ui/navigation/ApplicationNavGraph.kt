@@ -12,6 +12,7 @@ import com.example.amobileappfordisabledpeople.ui.views.CameraPermission
 import com.example.amobileappfordisabledpeople.ui.views.DangerWarningScreen
 import com.example.amobileappfordisabledpeople.ui.views.DetectionScreen
 import com.example.amobileappfordisabledpeople.ui.views.ExploreScreen
+import com.example.amobileappfordisabledpeople.ui.views.FaceRecognitionScreen
 import com.example.amobileappfordisabledpeople.ui.views.MoodTrackingScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -76,9 +77,18 @@ fun ApplicationNavHost(
         }
         composable(route = MoodTrackingDestination.route) {
             MoodTrackingScreen(cameraExecutor = cameraExecutor,
-//                navigateToFaceRecognition = {navController.navigate(FaceRecognition.route)},
+                navigateToFaceRecognition = {navController.navigate(FaceRecognition.route)},
                 navigateToExploreMode = {navController.navigate(DetectionDestination.route)}
             )
+        }
+        composable(route = FaceRecognition.route) {
+            FaceRecognitionScreen(
+                cameraExecutor = cameraExecutor,
+                faceNetModel = faceNetModel,
+                navigateToMoodTracking = {navController.navigate(MoodTrackingDestination.route)},
+                navigateToExploreMode = {navController.navigate(DetectionDestination.route)}
+            )
+
         }
     }
 }

@@ -3,15 +3,14 @@ package com.example.amobileappfordisabledpeople.ui.views
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.PointF
-import android.graphics.Rect
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -21,12 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toComposeRect
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.amobileappfordisabledpeople.SocializingModeBar
-import com.example.amobileappfordisabledpeople.features.face_detection.FaceDetectionAnalyzer
+import com.example.amobileappfordisabledpeople.features.face_recognition.FaceNetModel
 import com.example.amobileappfordisabledpeople.features.face_recognition.FaceRecognitionAnalyzer
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.example.amobileappfordisabledpeople.utils.adjustPoint
@@ -40,11 +40,15 @@ import kotlin.collections.forEach
 @Composable
 fun FaceRecognitionScreen(
     cameraExecutor: ExecutorService,
-    moodTrackingViewModel: MainViewModel = hiltViewModel(),
+    viewModel: MainViewModel = hiltViewModel(),
+    faceNetModel: FaceNetModel,
+    navigateToMoodTracking: () -> Unit,
+    navigateToExploreMode: () -> Unit
+
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    var previewView: PreviewView
+    lateinit var previewView: PreviewView
 
     val screenWidth = remember { mutableStateOf(context.resources.displayMetrics.widthPixels) }
     val screenHeight = remember { mutableStateOf(context.resources.displayMetrics.heightPixels) }
@@ -53,14 +57,6 @@ fun FaceRecognitionScreen(
     val imageHeight = remember { mutableStateOf(0) }
 
     val faces = remember { mutableStateListOf<Face>() }
-
-    var showDialog by remember { mutableStateOf(false) }
-
-    val mood = remember { mutableStateOf<MoodState>(MoodState.Normal) }
-
-    LaunchedEffect(faces) {
-        mood.value = MoodState.Normal
-    }
 
     val faceRecognitionAnalyzer = FaceRecognitionAnalyzer(context) { detectedFace, width, height ->
         faces.clear()
@@ -77,7 +73,7 @@ fun FaceRecognitionScreen(
             it.setAnalyzer(cameraExecutor, faceRecognitionAnalyzer)
         }
 
-    moodTrackingViewModel.initRepo(imageAnalysis)
+    viewModel.initRepo(imageAnalysis)
 
     Scaffold(
         topBar = {
@@ -90,10 +86,16 @@ fun FaceRecognitionScreen(
             AndroidView(
                 factory = {
                     previewView = PreviewView(it)
-                    moodTrackingViewModel.showCameraPreview(previewView = previewView, lifecycleOwner = lifecycleOwner)
+                    viewModel.showCameraPreview(previewView = previewView, lifecycleOwner = lifecycleOwner)
                     previewView
                 },
                 modifier = Modifier.fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onDoubleTap = {
+                            }
+                        )
+                    }
             )
             DrawFaces(faces, imageHeight.value, imageWidth.value, screenWidth.value, screenHeight.value)
         }
@@ -126,22 +128,4 @@ fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth:
             )
         }
     }
-}
-
-fun cropFace(image: Bitmap, boundingBox: Rect): Bitmap? {
-    val shift = 0
-    if (boundingBox.top >= 0 && boundingBox.bottom <= image.getWidth()
-        && boundingBox.top + boundingBox.height() <= image.getHeight()
-        && boundingBox.left >= 0
-        && boundingBox.left + boundingBox.width() <= image.getWidth()
-    ) {
-        return Bitmap.createBitmap(
-            image,
-            boundingBox.left,
-            boundingBox.top + shift,
-            boundingBox.width(),
-            boundingBox.height()
-        )
-    }
-    return null
 }
