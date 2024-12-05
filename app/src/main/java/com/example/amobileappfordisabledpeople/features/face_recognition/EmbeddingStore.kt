@@ -2,6 +2,7 @@ package com.example.amobileappfordisabledpeople.features.face_recognition
 
 import android.content.Context
 import com.example.amobileappfordisabledpeople.R
+import com.example.amobileappfordisabledpeople.features.FaceDetectorProvider.faceDetector
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
@@ -34,12 +35,6 @@ object EmbeddingStore {
         )
 
         val embeddings = mutableListOf<FloatArray>()
-        val options = FaceDetectorOptions.Builder()
-            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
-            .enableTracking()
-            .build()
-        val faceDetector = FaceDetection.getClient(options)
 
         famousImages.forEach { drawableResId ->
             val bitmap = loadDrawableAsBitmap(context, drawableResId)

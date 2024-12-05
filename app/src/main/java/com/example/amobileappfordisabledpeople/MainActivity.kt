@@ -69,6 +69,7 @@ class MainActivity : ComponentActivity(), TextToSpeech.OnInitListener {
                         labels = labels,
                         textToSpeech = textToSpeech
                     )
+//                    FaceRecognitionScreen(cameraExecutor)
                 }
             }
         }

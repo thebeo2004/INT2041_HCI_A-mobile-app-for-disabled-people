@@ -10,31 +10,18 @@ import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import com.example.amobileappfordisabledpeople.features.FaceDetectorProvider.faceDetector
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
-import com.google.mlkit.vision.face.FaceDetection
-import com.google.mlkit.vision.face.FaceDetectorOptions
 import org.tensorflow.lite.support.image.TensorImage
 import kotlin.collections.List
-import com.example.amobileappfordisabledpeople.R
-import kotlin.math.min
 
 class FaceRecognitionAnalyzer(
     private val context: Context,
     private val faceNetModel: FaceNetModel,
     private val onFaceDetected: (faces: MutableList<Face>, width: Int, height: Int, recognizedPerson: String, distance: Float) -> Unit,
 ) : ImageAnalysis.Analyzer {
-
-    private val options = FaceDetectorOptions.Builder()
-        .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-        .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
-        .enableTracking()
-        .build()
-
-    private val faceDetector = FaceDetection.getClient(options)
 
     init {
         EmbeddingStore.initialize(context, faceNetModel)
