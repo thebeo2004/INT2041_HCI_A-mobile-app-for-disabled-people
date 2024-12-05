@@ -1,4 +1,4 @@
-package com.example.amobileappfordisabledpeople.features
+package com.example.amobileappfordisabledpeople.features.face_detection
 
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
