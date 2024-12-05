@@ -9,7 +9,7 @@ import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.image.ops.ResizeOp
 
-fun preprocessImage(tensorImage: TensorImage): TensorImage? {
+fun preprocessImage(tensorImage: TensorImage): TensorImage {
 
     val imageProcessor = ImageProcessor.Builder()
         .add(ResizeOp(112, 112, ResizeOp.ResizeMethod.BILINEAR))

@@ -37,6 +37,8 @@ class FaceRecognitionAnalyzer(
     override fun analyze(image: ImageProxy) {
         image.image?.let {
 
+            Log.d("FaceRecognition", "Image width: ${image.width}, Image height: ${image.height}")
+
             val bitmap = image.toBitmap()
             val imageValue = InputImage.fromMediaImage(it, image.imageInfo.rotationDegrees)
 
@@ -51,19 +53,25 @@ class FaceRecognitionAnalyzer(
                         // Find the most prominent face (largest bounding box)
                         val mostProminentFace = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
 
+                        Log.d("FaceRecognition", "Most prominent face: $mostProminentFace")
+
                         if (mostProminentFace != null) {
                             val faceBitmap = cropFace(bitmap, mostProminentFace.boundingBox)
-                            val tensorImage = TensorImage.fromBitmap(faceBitmap)
 
-                            val faceEmbedding = faceNetModel.getEmbedding(tensorImage)
+                            if (faceBitmap != null) {
+                                Log.d("FaceRecognition", "Face bitmap: $faceBitmap")
 
-                            Log.d("FaceRecognition", "Face embedding: ${faceEmbedding.contentToString()}")
+                                val tensorImage = TensorImage.fromBitmap(faceBitmap)
+                                Log.d("FaceRecognition", "Tensor image: $tensorImage")
 
-                            val storedBitmap = loadDrawableAsBitmap(context, R.drawable.donal_trump)
-                            val storedImage = TensorImage.fromBitmap(storedBitmap)
-                            val storedImageEmbedding = faceNetModel.getEmbedding(storedImage)
+                                val preprocessedImage = preprocessImage(tensorImage)
+                                val faceEmbedding = faceNetModel.getEmbedding(preprocessedImage)
 
-                            Log.d("Recognition", "${calculateEuclideanDistance(faceEmbedding, storedImageEmbedding)}")
+                                val storedImageEmbedding = embeddingStoraedImages()
+
+                                Log.d("FaceRecognition", "${calculateEuclideanDistance(faceEmbedding, storedImageEmbedding)}")
+
+                            }
                         }
                         onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight)
                     }
@@ -80,6 +88,14 @@ class FaceRecognitionAnalyzer(
         val bytes = ByteArray(buffer.capacity())
         buffer.get(bytes)
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, null)
+    }
+
+    fun embeddingStoraedImages(): FloatArray {
+        val storedBitmap = loadDrawableAsBitmap(context, R.drawable.donal_trump)
+        val storedImage = TensorImage.fromBitmap(storedBitmap)
+        val preprocessedImage = preprocessImage(storedImage)
+        val storedImageEmbedding = faceNetModel.getEmbedding(preprocessedImage)
+        return storedImageEmbedding
     }
 }
 
