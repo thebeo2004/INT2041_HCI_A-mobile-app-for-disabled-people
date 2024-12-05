@@ -36,10 +36,8 @@ class FaceRecognitionAnalyzer(
 
     private val faceDetector = FaceDetection.getClient(options)
 
-    private var storedImageEmbeddings: List<FloatArray> = mutableListOf()
-
     init {
-        storedImageEmbeddings = embeddingStoredImages()
+        EmbeddingStore.initialize(context, faceNetModel)
     }
 
     @OptIn(ExperimentalGetImage::class)
@@ -90,7 +88,7 @@ class FaceRecognitionAnalyzer(
                                     "Ha Tang"
                                 )
 
-                                storedImageEmbeddings.forEachIndexed { index, embedding ->
+                                EmbeddingStore.getEmbeddings().forEachIndexed { index, embedding ->
                                     val distance = calculateEuclideanDistance(faceEmbedding, embedding)
                                     Log.d("Famous", "Distance from $person to ${famous[index]}: $distance")
 
@@ -104,12 +102,13 @@ class FaceRecognitionAnalyzer(
 
                             }
                         }
-                        if (person != "None") {
-                            onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight, person, actualDistance)
-                        } else {
-                            onFaceDetected(mutableListOf(), imageWidth, imageHeight, person, 999999f)
-                        }
 
+//                        if (person != "None") {
+//                            onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight, person, actualDistance)
+//                        } else {
+//                            onFaceDetected(mutableListOf(), imageWidth, imageHeight, person, 999999f)
+//                        }
+                        onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight, person, actualDistance)
                     }
 
                     image.image?.close()
@@ -124,45 +123,6 @@ class FaceRecognitionAnalyzer(
         val bytes = ByteArray(buffer.capacity())
         buffer.get(bytes)
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, null)
-    }
-
-    fun embeddingStoredImages(): List<FloatArray> {
-
-        val famousImages = listOf(
-            R.drawable.billie_eilish,
-            R.drawable.david_beckham,
-            R.drawable.donal_trump,
-            R.drawable.mtp,
-            R.drawable.rihanna,
-            R.drawable.thu_vu,
-            R.drawable.hung,
-            R.drawable.ha
-        )
-
-        val embeddings = mutableListOf<FloatArray>()
-
-        famousImages.forEach { drawableResId ->
-            val bitmap = loadDrawableAsBitmap(context, drawableResId)
-            val inputImage = InputImage.fromBitmap(bitmap, 0)
-
-            faceDetector.process(inputImage)
-                .addOnSuccessListener { faces ->
-                    faces.forEach { face ->
-                        val faceBitmap = cropFace(bitmap, face.boundingBox, 0f)
-                        if (faceBitmap != null) {
-                            val tensorImage = TensorImage.fromBitmap(faceBitmap)
-                            val preprocessedImage = preprocessImage(tensorImage)
-                            val embedding = faceNetModel.getEmbedding(preprocessedImage)
-                            embeddings.add(embedding)
-                        }
-                    }
-                }
-                .addOnFailureListener { e ->
-                    e.printStackTrace()
-                }
-        }
-
-        return embeddings
     }
 }
 
