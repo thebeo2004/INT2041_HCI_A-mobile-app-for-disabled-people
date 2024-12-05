@@ -3,6 +3,7 @@ package com.example.amobileappfordisabledpeople.ui.views
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.PointF
+import android.speech.tts.TextToSpeech
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -36,6 +38,7 @@ import com.example.amobileappfordisabledpeople.utils.adjustPoint
 import com.example.amobileappfordisabledpeople.utils.adjustSize
 import com.example.amobileappfordisabledpeople.utils.drawBounds
 import com.google.mlkit.vision.face.Face
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import kotlin.collections.forEach
 import kotlin.math.abs
@@ -65,11 +68,24 @@ fun FaceRecognitionScreen(
     val recognizedPerson = remember { mutableStateOf("None") }
     val distance = remember { mutableStateOf(0f) }
 
+    var textToSpeech by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    LaunchedEffect(Unit) {
+        textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = Locale.US
+            }
+        }
+    }
+
     LaunchedEffect(recognizedPerson.value) {
         if (recognizedPerson.value != "None") {
+            textToSpeech?.speak(recognizedPerson.value, TextToSpeech.QUEUE_FLUSH, null, null)
         }
-        else {
-        }
+    }
+
+    DisposableEffect(Unit) {
+        textToSpeech?.shutdown()
     }
 
     val faceRecognitionAnalyzer = FaceRecognitionAnalyzer(context, faceNetModel) { detectedFace, width, height, name, actualDistance  ->
@@ -123,7 +139,8 @@ fun FaceRecognitionScreen(
                 modifier = Modifier.fillMaxSize()
                     .pointerInput(Unit) {
                         detectTapGestures(
-                            onDoubleTap = {
+                            onTap = {
+                                textToSpeech?.speak(recognizedPerson.value, TextToSpeech.QUEUE_FLUSH, null, null)
                             }
                         )
                     }
