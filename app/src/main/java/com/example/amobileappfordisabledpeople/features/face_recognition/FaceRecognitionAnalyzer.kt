@@ -85,7 +85,9 @@ class FaceRecognitionAnalyzer(
                                     "Donald Trump",
                                     "MTP",
                                     "Rihanna",
-                                    "Thu Vu"
+                                    "Thu Vu",
+                                    "Xuan Hung",
+                                    "Ha Tang"
                                 )
 
                                 storedImageEmbeddings.forEachIndexed { index, embedding ->
@@ -132,7 +134,9 @@ class FaceRecognitionAnalyzer(
             R.drawable.donal_trump,
             R.drawable.mtp,
             R.drawable.rihanna,
-            R.drawable.thu_vu
+            R.drawable.thu_vu,
+            R.drawable.hung,
+            R.drawable.ha
         )
 
         val embeddings = mutableListOf<FloatArray>()
