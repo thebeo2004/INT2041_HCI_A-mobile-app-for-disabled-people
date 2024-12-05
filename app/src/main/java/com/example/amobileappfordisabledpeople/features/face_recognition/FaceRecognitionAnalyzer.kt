@@ -94,14 +94,19 @@ class FaceRecognitionAnalyzer(
 
                                     actualDistance = min(actualDistance, distance)
 
-                                    if (actualDistance < 1.2f) {
+                                    if (actualDistance < 1f) {
                                         person = famous[index]
                                     }
                                 }
 
                             }
                         }
-                        onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight, person, actualDistance)
+                        if (person != "None") {
+                            onFaceDetected(mostProminentFace?.let { mutableListOf(it) } ?: mutableListOf(), imageWidth, imageHeight, person, actualDistance)
+                        } else {
+                            onFaceDetected(mutableListOf(), imageWidth, imageHeight, person, 999999f)
+                        }
+
                     }
 
                     image.image?.close()
