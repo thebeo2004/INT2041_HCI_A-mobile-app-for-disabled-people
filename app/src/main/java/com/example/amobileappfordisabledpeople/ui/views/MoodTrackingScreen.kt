@@ -28,7 +28,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.amobileappfordisabledpeople.DragThreshold
 import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.SocializingModeBar
-import com.example.amobileappfordisabledpeople.features.FaceDetectionAnalyzer
+import com.example.amobileappfordisabledpeople.features.face_detection.FaceDetectionAnalyzer
 import com.example.amobileappfordisabledpeople.presentation.MainViewModel
 import com.example.amobileappfordisabledpeople.utils.adjustPoint
 import com.example.amobileappfordisabledpeople.utils.adjustSize
@@ -189,13 +189,13 @@ fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth:
             val certainty = "Certainty: ${calculateCertainty(face.headEulerAngleX, face.headEulerAngleY, face.headEulerAngleZ)}%"
 
 
-            val smileLevel = "Smile: ${(face.smilingProbability ?: 0f) * 100}%"
+            val smileLevel = "Smile: ${String.format("%.2f", (face.smilingProbability ?: 0f) * 100)}%"
             val upsetLevel = "Upset: ${calculateUpsetLevel(face)}%"
 
             updateEmotionState(face.smilingProbability ?: 0f, calculateUpsetLevel(face).toFloat())
 
             drawContext.canvas.nativeCanvas.drawText(
-                "$certainty\n$smileLevel\n$upsetLevel",
+                "$smileLevel\n$upsetLevel",
                 topLeft.x,
                 topLeft.y - 10, // Position the text above the bounding box
                 android.graphics.Paint().apply {
