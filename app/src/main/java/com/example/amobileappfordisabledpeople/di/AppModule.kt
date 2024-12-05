@@ -1,6 +1,7 @@
 package com.example.amobileappfordisabledpeople.di
 
 import android.app.Application
+import android.content.Context
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
@@ -10,10 +11,16 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import com.example.amobileappfordisabledpeople.Data.repository.CustomCameraRepoImpl
 import com.example.amobileappfordisabledpeople.domain.repository.CustomCameraRepo
+import com.example.amobileappfordisabledpeople.features.face_recognition.FaceNetModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import javax.inject.Singleton
 
 //DI: stands for dependency injection, which is responsible for providing the dependencies to other app's components.
@@ -91,5 +98,15 @@ object AppModule {
             imageCapture = imageCapture,
             imageAnalysis = imageAnalysis
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideFaceNetModel(@ApplicationContext context: Context): FaceNetModel {
+        return runBlocking {
+            CoroutineScope(Dispatchers.IO).async {
+                FaceNetModel(context)
+            }.await()
+        }
     }
 }
