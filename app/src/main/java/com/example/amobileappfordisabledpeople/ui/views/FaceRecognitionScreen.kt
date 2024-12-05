@@ -42,8 +42,8 @@ fun FaceRecognitionScreen(
     cameraExecutor: ExecutorService,
     viewModel: MainViewModel = hiltViewModel(),
     faceNetModel: FaceNetModel,
-    navigateToMoodTracking: () -> Unit,
-    navigateToExploreMode: () -> Unit
+    navigateToMoodTracking: () -> Unit = {},
+    navigateToExploreMode: () -> Unit = {}
 
 ) {
     val context = LocalContext.current
@@ -58,7 +58,7 @@ fun FaceRecognitionScreen(
 
     val faces = remember { mutableStateListOf<Face>() }
 
-    val faceRecognitionAnalyzer = FaceRecognitionAnalyzer(context) { detectedFace, width, height ->
+    val faceRecognitionAnalyzer = FaceRecognitionAnalyzer(context, faceNetModel) { detectedFace, width, height ->
         faces.clear()
         faces.addAll(detectedFace)
         imageWidth.value = width

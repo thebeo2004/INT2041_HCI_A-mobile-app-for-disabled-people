@@ -3,6 +3,7 @@ package com.example.amobileappfordisabledpeople.features.face_recognition
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.graphics.Rect
 import android.util.Log
 import androidx.annotation.OptIn
@@ -20,10 +21,9 @@ import com.example.amobileappfordisabledpeople.R
 
 class FaceRecognitionAnalyzer(
     private val context: Context,
-    private val onFaceDetected: (faces: MutableList<Face>, width: Int, height: Int) -> Unit
+    private val faceNetModel: FaceNetModel,
+    private val onFaceDetected: (faces: MutableList<Face>, width: Int, height: Int) -> Unit,
 ) : ImageAnalysis.Analyzer {
-
-    private val faceNetModel = FaceNetModel(context)
 
     private val options = FaceDetectorOptions.Builder()
         .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
@@ -55,8 +55,10 @@ class FaceRecognitionAnalyzer(
 
                         Log.d("FaceRecognition", "Most prominent face: $mostProminentFace")
 
+                        var person = "None"
+
                         if (mostProminentFace != null) {
-                            val faceBitmap = cropFace(bitmap, mostProminentFace.boundingBox)
+                            val faceBitmap = cropFace(bitmap, mostProminentFace.boundingBox, image.imageInfo.rotationDegrees.toFloat())
 
                             if (faceBitmap != null) {
                                 Log.d("FaceRecognition", "Face bitmap: $faceBitmap")
@@ -67,9 +69,23 @@ class FaceRecognitionAnalyzer(
                                 val preprocessedImage = preprocessImage(tensorImage)
                                 val faceEmbedding = faceNetModel.getEmbedding(preprocessedImage)
 
-                                val storedImageEmbedding = embeddingStoraedImages()
+                                val famous = listOf(
+                                    "Billie Eilish",
+                                    "David Beckham",
+                                    "Donald Trump",
+                                    "MTP",
+                                    "Rihanna"
+                                )
 
-                                Log.d("FaceRecognition", "${calculateEuclideanDistance(faceEmbedding, storedImageEmbedding)}")
+                                val storedImageEmbeddings = embeddingStoredImages()
+
+                                storedImageEmbeddings.forEachIndexed { index, embedding ->
+                                    val distance = calculateEuclideanDistance(faceEmbedding, embedding)
+                                    Log.d("Famous", "Distance from $person to ${famous[index]}: $distance")
+                                    if (distance < 1.1f) {
+                                        person = famous[index]
+                                    }
+                                }
 
                             }
                         }
@@ -90,30 +106,59 @@ class FaceRecognitionAnalyzer(
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, null)
     }
 
-    fun embeddingStoraedImages(): FloatArray {
-        val storedBitmap = loadDrawableAsBitmap(context, R.drawable.donal_trump)
-        val storedImage = TensorImage.fromBitmap(storedBitmap)
-        val preprocessedImage = preprocessImage(storedImage)
-        val storedImageEmbedding = faceNetModel.getEmbedding(preprocessedImage)
-        return storedImageEmbedding
+    fun embeddingStoredImages(): List<FloatArray> {
+
+        val famousImages = listOf(
+            R.drawable.billie_eilish,
+            R.drawable.david_beckham,
+            R.drawable.donal_trump,
+            R.drawable.mtp,
+            R.drawable.rihanna
+        )
+
+        val embeddings = mutableListOf<FloatArray>()
+
+        val storedBitmaps = famousImages.map { drawableResId ->
+            loadDrawableAsBitmap(context, drawableResId)
+        }
+
+        val storedImages = storedBitmaps.map { bitmap ->
+            TensorImage.fromBitmap(bitmap)
+        }
+
+        val preprocessedImages = storedImages.map { tensorImage ->
+            preprocessImage(tensorImage)
+        }
+
+        preprocessedImages.map { preprocessedImage ->
+            embeddings.add(faceNetModel.getEmbedding(preprocessedImage))
+        }
+
+        return embeddings
     }
 }
 
-fun cropFace(image: Bitmap, boundingBox: Rect): Bitmap? {
+fun cropFace(image: Bitmap?, boundingBox: Rect, rotationDegrees: Float): Bitmap? {
     val shift = 0
-    if (boundingBox.top >= 0 && boundingBox.bottom <= image.getWidth()
-        && boundingBox.top + boundingBox.height() <= image.getHeight()
-        && boundingBox.left >= 0
-        && boundingBox.left + boundingBox.width() <= image.getWidth()
-    ) {
-        return Bitmap.createBitmap(
-            image,
-            boundingBox.left,
-            boundingBox.top + shift,
-            boundingBox.width(),
-            boundingBox.height()
-        )
+    if (image != null) {
+
+        val matrix = Matrix().apply {
+            postRotate(rotationDegrees)
+        }
+
+        val rotatedImage = Bitmap.createBitmap(image, 0, 0, image.width, image.height, matrix, true)
+        // Ensure the bounding box is within the image dimensions
+        val left = boundingBox.left.coerceAtLeast(0)
+        val top = boundingBox.top.coerceAtLeast(0)
+        val right = boundingBox.right.coerceAtMost(image.width)
+        val bottom = boundingBox.bottom.coerceAtMost(image.height)
+
+        val width = right - left
+        val height = bottom - top
+
+        return Bitmap.createBitmap(rotatedImage, left, top, width, height)
     }
+
     return null
 }
 
