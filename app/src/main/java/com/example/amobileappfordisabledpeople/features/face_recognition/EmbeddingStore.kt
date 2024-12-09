@@ -30,7 +30,7 @@ object EmbeddingStore {
             R.drawable.mtp,
             R.drawable.rihanna,
             R.drawable.thu_vu,
-            R.drawable.hung,
+//            R.drawable.hung,
             R.drawable.ha
         )
 

@@ -67,7 +67,7 @@ class FaceRecognitionAnalyzer(
                                     "MTP",
                                     "Rihanna",
                                     "Thu Vu",
-                                    "Xuan Hung",
+//                                    "Xuan Hung",
                                     "Ha Tang"
                                 )
 
@@ -75,11 +75,9 @@ class FaceRecognitionAnalyzer(
                                     val distance = calculateEuclideanDistance(faceEmbedding, embedding)
                                     Log.d("Famous", "Distance from $person to ${famous[index]}: $distance")
 
-                                    if (distance < actualDistance) {
+                                    if (distance < 1f) {
                                         actualDistance = distance
-                                        if (actualDistance < 1f) {
-                                            person = famous[index]
-                                        }
+                                        person = famous[index]
                                     }
                                 }
 

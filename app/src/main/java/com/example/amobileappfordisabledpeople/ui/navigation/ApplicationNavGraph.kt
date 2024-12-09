@@ -50,25 +50,14 @@ fun ApplicationNavHost(
                 interpreter = interpreter,
                 labels = labels,
                 textToSpeech = textToSpeech,
-                navigateToDangerWarning = {navController.navigate(DangerWarningDestination.route)},
+                navigateToDangerWarning = {navController.navigate(ExploreDestination.route)},
                 navigateToExplore = {navController.navigate(ExploreDestination.route)},
-                navigateToSocializingMode = {navController.navigate(MoodTrackingDestination.route)}
-            )
-        }
-        composable(route = DangerWarningDestination.route) {
-            DangerWarningScreen(cameraExecutor = cameraExecutor,
-                yuvToRgbConverter = yuvToRgbConverter,
-                interpreter = interpreter,
-                labels = labels,
-                textToSpeech = textToSpeech,
-                navigateToExplore = {navController.navigate(ExploreDestination.route)},
-                navigateToDetection = {navController.navigate(DetectionDestination.route)},
                 navigateToSocializingMode = {navController.navigate(MoodTrackingDestination.route)}
             )
         }
         composable(route = ExploreDestination.route) {
             ExploreScreen(
-                navigateToDangerWarning = {navController.navigate(DangerWarningDestination.route)},
+                navigateToDangerWarning = {navController.navigate(DetectionDestination.route)},
                 navigateToDetection = {navController.navigate(DetectionDestination.route)},
                 navigateToSocializingMode = {navController.navigate(MoodTrackingDestination.route)}
             )

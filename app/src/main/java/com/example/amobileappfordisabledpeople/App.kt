@@ -41,13 +41,11 @@ fun AppBar(
     var selectedTabIndex = 0
     if (destinationName == stringResource(R.string.detection)) {
         selectedTabIndex = 0
-    } else if (destinationName == stringResource(R.string.danger_warning)) {
-        selectedTabIndex = 1
     } else if (destinationName == stringResource(R.string.explore)) {
-        selectedTabIndex = 2
+        selectedTabIndex = 1
     }
 
-    val tabs = listOf("DETECTION", "WARNING", "EXPLORE")
+    val tabs = listOf("OBJECT DETECTION", "EXPLORE")
 
     TabRow(
         selectedTabIndex = selectedTabIndex,

@@ -173,13 +173,13 @@ fun DrawFaces(faces: List<Face>, imageWidth: Int, imageHeight: Int, screenWidth:
             val certainty = "Certainty: ${calculateCertainty(face.headEulerAngleX, face.headEulerAngleY, face.headEulerAngleZ)}%"
 
 
-            val smileLevel = "Smile: ${String.format("%.2f", (face.smilingProbability ?: 0f) * 100)}%"
+            val smileLevel = "Smile: ${(face.smilingProbability ?: 0f) * 100}%"
             val upsetLevel = "Upset: ${calculateUpsetLevel(face)}%"
 
             updateEmotionState(face.smilingProbability ?: 0f, calculateUpsetLevel(face).toFloat())
 
             drawContext.canvas.nativeCanvas.drawText(
-                "$smileLevel\n$upsetLevel",
+                "$smileLevel",
                 topLeft.x,
                 topLeft.y - 10, // Position the text above the bounding box
                 android.graphics.Paint().apply {
