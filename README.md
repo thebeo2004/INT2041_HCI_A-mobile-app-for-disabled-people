@@ -31,8 +31,8 @@ Modes are navigated between each other by sliding vertically on the screen, whil
 This is the default feature when starting the app. It allows users to identify objects in their surroundings in real-time by pointing the camera at the objects.
 <table align="center">
   <tr>
-    <td valign="top"><img src="images/chucnang11.jpg"></td>
-    <td valign="top"> <img src="images/chucnang12.jpg"></td>
+    <td valign="top"><img src="images/chucnang11.jpg" width="250"></td>
+    <td valign="top"> <img src="images/chucnang12.jpg" width="250"></td>
   </tr>
  </table>
 
@@ -45,9 +45,9 @@ This feature allows users to explore their surroundings by taking a picture of t
      <td>3. Continue tapping twice on the screen to turn on recognizing speech</td>
   </tr>
   <tr>
-    <td valign="top"><img src="images/explore1.jpg"></td>
-    <td valign="top"><img src="images/explore2.jpg"></td>
-    <td valign="top"><img src="images/explore3.jpg"></td>
+    <td valign="top"><img src="images/explore1.jpg" width="250"></td>
+    <td valign="top"><img src="images/explore2.jpg" width="250"></td>
+    <td valign="top"><img src="images/explore3.jpg" width="250"></td>
   </tr>
  </table>
 
@@ -57,8 +57,8 @@ This feature allows users to explore their surroundings by taking a picture of t
     <td>5. The system returns the results and reads them</td>
   </tr>
   <tr>
-    <td valign="top"><img src="images/explore4.jpg"></td>
-    <td valign="top"><img src="images/explore5.jpg"></td>
+    <td valign="top"><img src="images/explore4.jpg" width="250"></td>
+    <td valign="top"><img src="images/explore5.jpg" width="250"></td>
   </tr>
  </table>
 
@@ -67,7 +67,7 @@ This feature allows users to explore their surroundings by taking a picture of t
 Allows real-time recognition of the other person's emotions and returns sounds corresponding to each emotion.
 <table align="center">
   <tr>
-    <td><img src="images/ER.png"></td>
+    <td><img src="images/ER.png" width="250"></td>
 </tr>
 </table>
 
@@ -75,7 +75,7 @@ Allows real-time recognition of the other person's emotions and returns sounds c
 This feature allows real-time recognition of the faces of other people around them. The app will then return the name of the recognized person or none if their face is not in the database.
 <table align="center">
   <tr>
-    <td><img src="images/FR_Cap.png"></td>
+    <td><img src="images/FR_Cap.png" width="250"></td>
 </tr>
 </table>
 
