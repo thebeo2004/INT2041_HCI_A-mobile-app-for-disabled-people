@@ -1,20 +1,31 @@
 package com.example.amobileappfordisabledpeople.features.face_recognition
 
 import android.content.Context
+import android.util.Log
 import com.example.amobileappfordisabledpeople.R
 import com.example.amobileappfordisabledpeople.features.FaceDetectorProvider.faceDetector
+import com.google.gson.Gson
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.face.FaceDetection
-import com.google.mlkit.vision.face.FaceDetectorOptions
 import org.tensorflow.lite.support.image.TensorImage
+import java.io.File
 
 
 object EmbeddingStore {
+    private const val EMBEDDINGS_FILE = "embeddings.json"
     private var storedImageEmbeddings: List<FloatArray> = mutableListOf()
 
     fun initialize(context: Context, faceNetModel: FaceNetModel) {
         if (storedImageEmbeddings.isEmpty()) {
-            storedImageEmbeddings = embeddingStoredImages(context, faceNetModel)
+            val embeddingsFile = File(context.filesDir, EMBEDDINGS_FILE)
+
+            if (embeddingsFile.exists()) {
+                Log.d("EmbeddingStore", "Loading embeddings from embeddings.json")
+                storedImageEmbeddings = loadEmbeddingsFromFile(embeddingsFile)
+            } else {
+                Log.d("EmbeddingStore", "embeddings.json does not exist. Creating a new file.")
+                storedImageEmbeddings = embeddingStoredImages(context, faceNetModel)
+                saveEmbeddingsToFile(embeddingsFile, storedImageEmbeddings)
+            }
         }
     }
 
@@ -30,7 +41,6 @@ object EmbeddingStore {
             R.drawable.mtp,
             R.drawable.rihanna,
             R.drawable.thu_vu,
-//            R.drawable.hung,
             R.drawable.ha
         )
 
@@ -57,5 +67,19 @@ object EmbeddingStore {
                 }
         }
         return embeddings
+    }
+
+    private fun saveEmbeddingsToFile(file: File, embeddings: List<FloatArray>) {
+        val gson = Gson()
+        val json = gson.toJson(embeddings)
+        file.writeText(json)
+    }
+
+    private fun loadEmbeddingsFromFile(file: File): List<FloatArray> {
+        val gson = Gson()
+        val json = file.readText()
+        val type = Array<FloatArray>::class.java
+//        val type = object : TypeToken<List<FloatArray>>() {}.type
+        return gson.fromJson(json, type).toList()
     }
 }
