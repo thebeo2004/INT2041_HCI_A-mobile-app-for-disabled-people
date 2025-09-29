@@ -114,11 +114,16 @@ fun cropFace(image: Bitmap?, boundingBox: Rect, rotationDegrees: Float): Bitmap?
         // Ensure the bounding box is within the image dimensions
         val left = boundingBox.left.coerceAtLeast(0)
         val top = boundingBox.top.coerceAtLeast(0)
-        val right = boundingBox.right.coerceAtMost(image.width)
-        val bottom = boundingBox.bottom.coerceAtMost(image.height)
+        val right = boundingBox.right.coerceAtMost(rotatedImage.width)
+        val bottom = boundingBox.bottom.coerceAtMost(rotatedImage.height)
 
         val width = right - left
         val height = bottom - top
+
+        if (width <= 0 || height <= 0) {
+            Log.e("FaceRecognition", "Invalid bounding box dimensions: width=$width, height=$height")
+            return null
+        }
 
         return Bitmap.createBitmap(rotatedImage, left, top, width, height)
     }
