@@ -16,16 +16,16 @@ object EmbeddingStore {
 
     fun initialize(context: Context, faceNetModel: FaceNetModel) {
         if (storedImageEmbeddings.isEmpty()) {
-            val embeddingsFile = File(context.filesDir, EMBEDDINGS_FILE)
-
-            if (embeddingsFile.exists()) {
-                Log.d("EmbeddingStore", "Loading embeddings from embeddings.json")
-                storedImageEmbeddings = loadEmbeddingsFromFile(embeddingsFile)
-            } else {
-                Log.d("EmbeddingStore", "embeddings.json does not exist. Creating a new file.")
-                storedImageEmbeddings = embeddingStoredImages(context, faceNetModel)
-                saveEmbeddingsToFile(embeddingsFile, storedImageEmbeddings)
-            }
+//            val embeddingsFile = File(context.filesDir, EMBEDDINGS_FILE)
+            storedImageEmbeddings = embeddingStoredImages(context, faceNetModel)
+//            if (embeddingsFile.exists()) {
+//                Log.d("EmbeddingStore", "Loading embeddings from embeddings.json")
+//                storedImageEmbeddings = loadEmbeddingsFromFile(embeddingsFile)
+//            } else {
+//                Log.d("EmbeddingStore", "embeddings.json does not exist. Creating a new file.")
+//                storedImageEmbeddings = embeddingStoredImages(context, faceNetModel)
+//                saveEmbeddingsToFile(embeddingsFile, storedImageEmbeddings)
+//            }
         }
     }
 
@@ -35,13 +35,11 @@ object EmbeddingStore {
 
     private fun embeddingStoredImages(context: Context, faceNetModel: FaceNetModel): List<FloatArray> {
         val famousImages = listOf(
-            R.drawable.billie_eilish,
-            R.drawable.david_beckham,
-            R.drawable.donal_trump,
-            R.drawable.mtp,
-            R.drawable.rihanna,
-            R.drawable.thu_vu,
-            R.drawable.ha
+//            R.drawable.khai,
+//            R.drawable.quang1,
+            R.drawable.tuananh2,
+            R.drawable.quang,
+            R.drawable.khai
         )
 
         val embeddings = mutableListOf<FloatArray>()

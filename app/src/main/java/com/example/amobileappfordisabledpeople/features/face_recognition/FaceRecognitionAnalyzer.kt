@@ -61,21 +61,17 @@ class FaceRecognitionAnalyzer(
                                 val faceEmbedding = faceNetModel.getEmbedding(preprocessedImage)
 
                                 val famous = listOf(
-                                    "Billie Eilish",
-                                    "David Beckham",
-                                    "Donald Trump",
-                                    "MTP",
-                                    "Rihanna",
-                                    "Thu Vu",
-//                                    "Xuan Hung",
-                                    "Ha Tang"
+                                    "Tuan Anh", "Quang", "Khai"
+//                                    "Khai", "Quang", "Tuan Anh"
+//                                    "Tuan Anh","David Beckham", "Donald Trump", "MTP", "Rihanna", "Thu Vu", "Ha"
                                 )
+
 
                                 EmbeddingStore.getEmbeddings().forEachIndexed { index, embedding ->
                                     val distance = calculateEuclideanDistance(faceEmbedding, embedding)
                                     Log.d("Famous", "Distance from $person to ${famous[index]}: $distance")
 
-                                    if (distance < 1f) {
+                                    if (distance < 1f && distance < actualDistance) {
                                         actualDistance = distance
                                         person = famous[index]
                                     }
